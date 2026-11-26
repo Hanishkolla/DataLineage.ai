@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DataLineage AI | SQL Intelligence</title>
+
+  <style>
+
+    :root {
+
+      color-scheme: dark;
+
+      --bg: #0b1020;
+
+      --panel: #141c30;
+
+      --panel2: #19243b;
+
+      --border: #2b3954;
+
+      --text: #eef3ff;
+
+      --muted: #9eacc5;
+
+      --accent: #6c8cff;
+
+      --green: #43d9a3;
+
+      --red: #ff858e;
+
+    }
+
+
+
+    * { box-sizing: border-box; }
+
+
+
+    body {
+
+      margin: 0;
+
+      background: var(--bg);
+
+      color: var(--text);
+
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+
+      line-height: 1.5;
+
+    }
+
+
+
+    header {
+
+      padding: 25px max(20px, calc((100% - 1180px) / 2));
+
+      border-bottom: 1px solid var(--border);
+
+      background: #10182a;
+
+    }
+
+
+
+    header h1 { margin: 0; font-size: 26px; }
+
+    header p { margin: 6px 0 0; color: var(--muted); }
+
+
+
+    main {
+
+      max-width: 1180px;
+
+      padding: 25px 20px 60px;
+
+      margin: auto;
+
+    }
+
+
+
+    .topbar, .stats, .columns {
+
+      display: grid;
+
+      gap: 16px;
+
+    }
+
+
+
+    .topbar {
+
+      grid-template-columns: 1fr auto;
+
+      align-items: center;
+
+      margin-bottom: 18px;
+
+    }
+
+
+
+    .stats { grid-template-columns: repeat(3, 1fr); }
+
+
+
+    .columns { grid-template-columns: 1fr 1fr; }
+
+
+
+    .panel, .stat, .result-card {
+
+      background: var(--panel);
+
+      border: 1px solid var(--border);
+
+      border-radius: 14px;
+
+      padding: 20px;
+
+      min-width: 0;
+
+    }
+
+
+
+    .stat small { color: var(--muted); display: block; }
+
+    .stat strong { font-size: 27px; display: block; margin-top: 5px; }
+
+
+
+    h2 { font-size: 19px; margin: 0 0 8px; }
+
+    h3 { font-size: 15px; margin: 18px 0 10px; }
+
+    .muted, .hint { color: var(--muted); font-size: 13px; }
+
+    .hint { margin-top: 12px; overflow-wrap: anywhere; }
+
+    .success { color: var(--green); }
+
+    .error { color: var(--red); }
+
+
+
+    label {
+
+      display: block;
+
+      font-size: 13px;
+
+      color: var(--muted);
+
+      margin: 14px 0 6px;
+
+    }
+
+
+
+    input, textarea, select {
+
+      width: 100%;
+
+      border: 1px solid var(--border);
+
+      background: #0c1425;
+
+      color: var(--text);
+
+      border-radius: 8px;
+
+      padding: 11px 12px;
+
+      font: inherit;
+
+    }
+
+
+
+    textarea {
+
+      min-height: 155px;
+
+      resize: vertical;
+
+      font-family: Consolas, monospace;
+
+      font-size: 13px;
+
+    }
+
+
+
+    button {
+
+      border: 0;
+
+      border-radius: 8px;
+
+      background: var(--accent);
+
+      color: white;
+
+      padding: 11px 16px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      margin: 12px 8px 0 0;
+
+    }
+
+
+
+    button.secondary { background: #293750; }
+
+    button:disabled { opacity: .55; cursor: wait; }
+
+
+
+    .badge {
+
+      display: inline-block;
+
+      padding: 4px 9px;
+
+      border-radius: 20px;
+
+      background: #203a36;
+
+      color: var(--green);
+
+      font-size: 12px;
+
+    }
+
+
+
+    .table-list, .mapping-list, .relationship-list {
+
+      display: grid;
+
+      gap: 10px;
+
+    }
+
+
+
+    .table-node, .mapping, .relationship {
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      padding: 12px;
+
+      background: var(--panel2);
+
+      overflow-wrap: anywhere;
+
+    }
+
+
+
+    .table-node strong, .mapping strong { display: block; }
+
+    .table-node small, .mapping small { color: var(--muted); }
+
+
+
+    .arrow {
+
+      color: var(--accent);
+
+      font-size: 20px;
+
+      text-align: center;
+
+      padding: 3px;
+
+    }
+
+
+
+    .mapping .flow {
+
+      display: flex;
+
+      align-items: center;
+
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin: 6px 0;
+
+    }
+
+
+
+    .mapping code {
+
+      background: #0c1425;
+
+      padding: 5px 7px;
+
+      border-radius: 5px;
+
+      overflow-wrap: anywhere;
+
+    }
+    .expression-evidence { display: block; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--green); }
+
+
+
+
+    pre {
+
+      white-space: pre-wrap;
+
+      overflow-wrap: anywhere;
+
+      max-height: 520px;
+
+      overflow: auto;
+
+      background: #080e1b;
+
+      padding: 14px;
+
+      border-radius: 9px;
+
+      border: 1px solid var(--border);
+
+      font-size: 12px;
+
+    }
+
+
+
+    .empty {
+
+      color: var(--muted);
+
+      border: 1px dashed var(--border);
+
+      border-radius: 9px;
+
+      padding: 15px;
+
+      font-size: 13px;
+
+    }
+
+
+    .graph-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+    .graph-toolbar input { max-width: 340px; }
+    .graph-shell { width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: #0c1425; }
+    .lineage-svg { display: block; max-width: none; }
+    .graph-edge { fill: none; stroke: #7187b7; stroke-width: 2; opacity: .9; }
+    .graph-edge.is-related { stroke: #43d9a3; stroke-width: 3.2; opacity: 1; }
+    .graph-edge.is-muted { opacity: .16; }
+    .graph-node-group.is-muted { opacity: .22; }
+    .graph-node-group.is-related .graph-node { stroke: #43d9a3; stroke-width: 2.4; }
+    .graph-node-group.is-search-match .graph-node { stroke: #f5c86b; stroke-width: 3; }
+    .graph-toolbar button { white-space: nowrap; }
+    .graph-toolbar select { max-width: 180px; }
+    .graph-node { fill: #192b47; stroke: #6c8cff; stroke-width: 1.5; }
+    .graph-node.selected { fill: #24463f; stroke: #43d9a3; stroke-width: 2.5; }
+    .graph-label { fill: #eef3ff; font-size: 13px; font-weight: 600; text-anchor: middle; }
+    .graph-subtitle { fill: #aebbd3; font-size: 10px; text-anchor: middle; }
+    .graph-node-group { cursor: pointer; }
+    .graph-node-group:focus { outline: none; }
+    .graph-node-group:focus .graph-node { stroke: #fff; stroke-width: 3; }
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .graph-detail { margin-top: 10px; padding: 12px; background: var(--panel2); border-radius: 8px; overflow-wrap: anywhere; }
+    .graph-detail ul { margin: 6px 0 0; padding-left: 20px; }
+
+
+
+    section { margin-top: 22px; }
+
+    .footer { color: var(--muted); text-align: center; margin-top: 30px; font-size: 12px; }
+
+    .topbar-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+    #githubIntegrationPanel[hidden] { display:none !important; }
+    #githubIntegrationPanel { scroll-margin-top:18px; }
+    #githubIntegrationPanel h2 { margin-top:0; }
+    #githubIntegrationPanel .form-grid { align-items:end; }
+    #githubIntegrationPanel #ghStatus { display:block; margin-top:12px; color:var(--muted); font-size:13px; }
+    #githubIntegrationPanel #ghResults { max-height:520px; overflow:auto; padding:14px; border:1px solid var(--border); border-radius:10px; background:#0c1425; }
+    .app-side-rail { position:fixed; z-index:1000; left:14px; top:142px; width:76px; padding:9px 7px; border:1px solid var(--border); border-radius:14px; background:rgba(20,28,48,.96); box-shadow:0 12px 34px rgba(0,0,0,.22); }
+    .app-side-rail button { width:100%; display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:10px 4px; font-size:11px; }
+    .rail-account-icon { font-size:23px; line-height:1; }
+    .account-drawer { position:fixed; z-index:10002; top:0; right:0; width:min(440px,94vw); height:100dvh; overflow:auto; padding:26px; background:var(--panel); border-left:1px solid var(--border); box-shadow:-24px 0 70px rgba(0,0,0,.35); transform:translateX(105%); transition:transform .22s ease; }
+    .account-drawer.is-open { transform:translateX(0); }
+    .account-backdrop { position:fixed; inset:0; z-index:10001; background:rgba(3,8,20,.62); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .account-backdrop.is-open { opacity:1; pointer-events:auto; }
+    .account-drawer-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+    .account-drawer-head h2 { font-size:24px; margin:5px 0 0; }
+    .account-eyebrow { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.14em; }
+    .account-close { margin:0; width:38px; height:38px; padding:0; font-size:23px; }
+    .account-status { margin:16px 0; color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    .account-panel-content { display:grid; gap:14px; }
+    .account-card { border:1px solid var(--border); background:var(--panel2); border-radius:13px; padding:16px; min-width:0; }
+    .account-card-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .account-card h3 { margin:0 0 5px; font-size:15px; }
+    .account-muted { color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+    .account-plan { font-size:23px; font-weight:800; margin:9px 0 2px; }
+    .account-pill { display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:999px; padding:4px 9px; font-size:11px; color:var(--green); text-transform:capitalize; }
+    .account-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .account-metric { padding:10px; border-radius:9px; background:#0c1425; border:1px solid var(--border); min-width:0; }
+    .account-metric small { display:block; color:var(--muted); font-size:11px; }
+    .account-metric strong { display:block; margin-top:3px; font-size:16px; overflow-wrap:anywhere; }
+    .account-progress { height:7px; overflow:hidden; background:#0c1425; border-radius:99px; margin-top:7px; }
+    .account-progress span { display:block; height:100%; background:var(--accent); border-radius:99px; }
+    .account-empty { border:1px dashed var(--border); border-radius:12px; padding:18px; color:var(--muted); font-size:13px; }
+    .account-empty strong { color:var(--text); }
+    .account-drawer-footer { display:flex; align-items:center; gap:8px; margin-top:22px; padding-top:16px; border-top:1px solid var(--border); color:var(--muted); font-size:11px; }
+    .account-secure-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+    body.account-open { overflow:hidden; }
+    @media (prefers-reduced-motion:reduce) { .account-drawer,.account-backdrop { transition:none; } }
+
+    @media (max-width: 720px) {
+
+      .app-side-rail { left:10px; top:auto; bottom:14px; width:auto; padding:6px; }
+      .app-side-rail button { min-width:64px; }
+      .columns, .stats, .topbar { grid-template-columns: 1fr; }
+
+      header h1 { font-size: 22px; }
+
+    }
+
+  </style>
+
+
+<style>
+.auth-overlay{display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 15% 15%,rgba(59,130,246,.35),transparent 35%),linear-gradient(135deg,rgba(8,15,35,.96),rgba(15,23,42,.94));backdrop-filter:blur(9px);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.auth-card{width:min(440px,100%);box-sizing:border-box;background:#fff;color:#172033;border:1px solid rgba(255,255,255,.55);border-radius:24px;padding:clamp(24px,5vw,36px);box-shadow:0 28px 90px rgba(0,0,0,.38);animation:authCardIn .22s ease-out}
+@keyframes authCardIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.auth-brand{display:flex;align-items:center;gap:11px;margin-bottom:26px}.auth-brand-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:22px;font-weight:800;box-shadow:0 8px 18px rgba(79,70,229,.25)}.auth-brand-name{font-size:15px;font-weight:800;letter-spacing:-.02em}.auth-brand-caption{display:block;font-size:11px;color:#64748b;font-weight:500;margin-top:2px}
+.auth-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#4f46e5;margin:0 0 9px}.auth-card h2{margin:0 0 9px;font-size:clamp(24px,5vw,29px);line-height:1.2;letter-spacing:-.04em;color:#111827}.auth-description{color:#64748b;font-size:14px;line-height:1.55;margin:0 0 23px}.auth-card label{display:block;margin:15px 0 7px;font-size:13px;font-weight:700;color:#334155}.auth-card input{width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #d8dee9;border-radius:11px;background:#fbfcff;color:#111827;font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}.auth-card input:focus{border-color:#6366f1;background:#fff;box-shadow:0 0 0 4px rgba(99,102,241,.12)}.auth-password-wrap{display:flex;align-items:stretch;position:relative}.auth-password-wrap input{padding-right:70px}.auth-toggle-password{position:absolute;right:7px;top:50%;transform:translateY(-50%);margin:0!important;padding:7px 8px!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#4f46e5!important;font-size:12px!important;font-weight:750!important;cursor:pointer;box-shadow:none!important}.auth-toggle-password:hover{background:#eef2ff!important}.auth-submit{display:block;width:100%;margin-top:20px!important;padding:13px 16px;border:0;border-radius:11px;background:linear-gradient(110deg,#2563eb,#5b4de8);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(79,70,229,.22);transition:transform .15s,filter .15s}.auth-submit:hover{filter:brightness(1.04);transform:translateY(-1px)}.auth-submit:disabled{opacity:.65;cursor:wait;transform:none}.auth-error{color:#b91c1c;min-height:1.25em;margin:12px 0 0;font-size:13px}.auth-switch-line{text-align:center;font-size:13px;color:#64748b;margin:20px 0 0}.auth-switch{background:transparent!important;color:#4f46e5!important;border:0!important;padding:2px 4px!important;margin:0!important;cursor:pointer;text-decoration:none;font:inherit;font-weight:800}.auth-switch:hover{text-decoration:underline}.auth-footnote{font-size:11px;line-height:1.5;color:#94a3b8;text-align:center;margin:17px 0 0}.auth-security-note{display:flex;align-items:center;justify-content:center;gap:6px;color:#64748b;font-size:11px;margin-top:15px}.auth-security-dot{width:6px;height:6px;border-radius:50%;background:#10b981}.auth-controls{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:8px}.auth-status{font-size:.85rem;color:#475569}.auth-link-button{background:transparent!important;border:0!important;color:#4f46e5!important;font:inherit;font-size:12px!important;font-weight:800!important;cursor:pointer;padding:5px 0!important}.auth-recovery{margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0}.auth-recovery input{margin:5px 0 10px}.auth-inline-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.auth-dev-link{display:inline-block;color:#4338ca;font-weight:800;overflow-wrap:anywhere}
+@media(max-width:480px){.auth-overlay{padding:12px}.auth-card{border-radius:20px}.auth-brand{margin-bottom:22px}}
+@media(prefers-reduced-motion:reduce){.auth-card{animation:none}.auth-submit,.auth-card input{transition:none}}
+</style>
+
+</head>
+
+<body>
+
+<div id="authOverlay" class="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <form id="authForm" class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-brand-mark" aria-hidden="true">D</div>
+      <div><div class="auth-brand-name">DataLineage AI</div><span class="auth-brand-caption">Understand your data. Protect what depends on it.</span></div>
+    </div>
+    <p class="auth-kicker" id="authKicker">Welcome back</p>
+    <h2 id="authTitle">Sign in to your workspace</h2>
+    <p id="authDescription" class="auth-description">Sign in to explore your SQL lineage, saved projects, and schema impact reports.</p>
+    <div id="primaryAuthFields">
+    <label for="authEmail" id="authEmailLabel">Email address or admin username</label>
+    <input id="authEmail" name="email" type="text" autocomplete="username" placeholder="you@example.com or admin" required>
+    <label for="authPassword">Password</label>
+    <div class="auth-password-wrap">
+      <input id="authPassword" name="password" type="password" autocomplete="current-password" required aria-describedby="authPasswordHint">
+      <button class="auth-toggle-password" type="button" data-password-target="authPassword" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
+    <p id="authPasswordHint" class="auth-footnote" style="text-align:left;margin:7px 0 0">Use your account password to continue.</p>
+    <div id="confirmPasswordGroup" style="display:none">
+      <label for="authConfirmPassword">Confirm password</label>
+      <div class="auth-password-wrap">
+        <input id="authConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="12">
+        <button class="auth-toggle-password" type="button" data-password-target="authConfirmPassword" aria-label="Show confirm password" aria-pressed="false">Show</button>
+      </div>
+    </div>
+    </div>
+    <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
+    <div id="loginActions" class="auth-inline-actions">
+      <button id="authSubmit" class="auth-submit" type="submit">Sign in</button>
+      <button id="authForgot" class="auth-link-button" type="button">Forgot password?</button>
+    </div>
+    <div id="recoveryPanel" class="auth-recovery" style="display:none">
+      <h3 id="recoveryTitle" style="margin:0 0 6px;font-size:17px;color:#111827">Reset your password</h3>
+      <p id="recoveryDescription" class="auth-description" style="margin-bottom:10px">Enter your account email to request a password-reset link.</p>
+      <label for="recoveryEmail">Email address</label>
+      <input id="recoveryEmail" type="email" autocomplete="email" placeholder="you@company.com">
+      <div id="resetPasswordFields" style="display:none">
+        <label for="recoveryPassword">New password</label>
+        <div class="auth-password-wrap"><input id="recoveryPassword" type="password" minlength="12" maxlength="256" autocomplete="new-password"><button class="auth-toggle-password" type="button" data-password-target="recoveryPassword" aria-label="Show new password" aria-pressed="false">Show</button></div>
+        <label for="recoveryConfirmPassword">Confirm new password</label>
+        <div class="auth-password-wrap"><input id="recoveryConfirmPassword" type="password" minlength="12" maxlength="256" autocomplete="new-password"><button class="auth-toggle-password" type="button" data-password-target="recoveryConfirmPassword" aria-label="Show confirm new password" aria-pressed="false">Show</button></div>
+      </div>
+      <button id="recoveryAction" class="auth-submit" type="button">Send reset link</button>
+      <button id="recoveryBack" class="auth-link-button" type="button">Back to sign in</button>
+    </div>
+    <div id="verificationActions" class="auth-recovery" style="display:none">
+      <button id="resendVerification" class="auth-link-button" type="button">Resend verification email</button>
+    </div>
+    <p id="authSwitchLine" class="auth-switch-line">New to DataLineage AI? <button id="authSwitch" class="auth-switch" type="button">Create an account</button></p>
+    <div class="auth-security-note"><span class="auth-security-dot"></span> Your session is protected with a secure cookie</div>
+    <p class="auth-footnote">Use a unique password. Verify your email before signing in.</p>
+  </form>
+</div>
+
+<aside id="accountDrawer" class="account-drawer" aria-hidden="true" aria-labelledby="accountDrawerTitle">
+  <div class="account-drawer-head">
+    <div><span class="account-eyebrow">PERSONAL & WORKSPACE</span><h2 id="accountDrawerTitle">Your account</h2></div>
+    <button type="button" class="secondary account-close" onclick="closeAccountPanel()" aria-label="Close account panel">×</button>
+  </div>
+  <div id="accountPanelStatus" class="account-status" role="status" aria-live="polite">Sign in to view your account details.</div>
+  <div id="accountPanelContent" class="account-panel-content">
+    <div class="account-empty"><strong>Account overview</strong><p>Your plan, subscription period, usage and company workspace memberships will appear here.</p></div>
+  </div>
+  <div class="account-drawer-footer"><span class="account-secure-dot"></span> Account details are private to your signed-in account.</div>
+</aside>
+<div id="accountBackdrop" class="account-backdrop" onclick="closeAccountPanel()"></div>
+<header>
+
+    <h1>DataLineage AI</h1>
+
+    <p>SQL intelligence, data relationships and schema impact analysis</p>
+
+  </header>
+
+
+
+  <main>
+
+    <div class="topbar">
+
+      <div>
+
+        <span class="badge">Local development</span>
+
+        <p class="muted">Analyze SQL and inspect source-to-target data flows.</p>
+
+      </div>
+
+      <div class="topbar-actions">
+        <button type="button" id="githubImpactToggle" class="secondary" onclick="toggleGitHubImpactPanel()" aria-controls="githubIntegrationPanel" aria-expanded="false">GitHub PR Impact Analysis</button>
+        <button type="button" class="secondary" onclick="toggleBillingPanel()" aria-controls="billingPanel" aria-expanded="false">Plans & Billing</button>
+        <button id="accountButton" type="button" onclick="openAccountPanel()" aria-controls="accountDrawer" aria-expanded="false" title="View account, company and subscription details">◎ Account</button>
+        <button class="secondary" id="apiButton" onclick="checkAPI()">Check API connection</button>
+        <button class="secondary" id="logoutButton" onclick="logoutUser()" style="display:none">Sign out</button>
+      </div>
+
+    </div>
+
+
+
+    <section class="panel" id="githubIntegrationPanel" hidden aria-label="GitHub Pull Request Impact Analysis" style="margin-top:16px;padding:18px;border:1px solid var(--border,#ccc);border-radius:12px">
+  <h2>GitHub Pull Request Impact Analysis</h2>
+  <p class="muted">Analyze SQL snapshots from a pull request. SQL is parsed, never executed. Live repository retrieval requires server-side GitHub credentials.</p>
+  <div class="form-grid">
+    <label>Repository (owner/name)<input id="ghRepository" placeholder="acme/warehouse"></label>
+    <label>Pull request number<input id="ghPrNumber" type="number" min="1" placeholder="42"></label>
+    <label>Base branch<input id="ghBaseBranch" value="main"></label>
+    <label>Head branch<input id="ghHeadBranch" placeholder="feature/sql-change"></label>
+  </div>
+  <label>SQL file snapshots (JSON)<textarea id="ghFilesJson" rows="7" style="width:100%" placeholder='[{"filename":"models/orders.sql","base_content":"select id from orders","head_content":"select id, total from orders"}]'></textarea></label>
+  <button type="button" onclick="runGitHubImpactAnalysis()">Analyze Pull Request SQL</button>
+
+<div class="form-grid" style="margin-top:12px">
+  <button type="button" onclick="ghLoadRepositories()">Load accessible repositories</button>
+  <label>Repository selection<select id="ghRepoSelect"><option value="">Load repositories first</option></select></label>
+  <button type="button" onclick="ghLoadPullRequests()">Load open pull requests</button>
+  <label>Pull request selection<select id="ghPrSelect"><option value="">Select repository first</option></select></label>
+  <button type="button" onclick="ghAnalyzeLivePR()">Fetch and analyze selected PR</button>
+</div>
+<p class="muted">Live retrieval uses the server-configured GitHub credential. The credential is never sent to this page.</p>
+
+  <span id="ghStatus" role="status" aria-live="polite"></span>
+  <pre id="ghResults" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+</section>
+
+    <section class="panel" id="billingPanel" hidden aria-label="Plans and billing" style="margin-top:16px;padding:18px;border:1px solid var(--border,#ccc);border-radius:12px">
+      <h2>DataLineage AI Plans & Billing</h2>
+      <p class="muted">Choose your billing currency and a monthly plan. Checkout opens securely on Razorpay. Your paid plan activates only after a verified payment webhook.</p>
+      <div class="form-grid">
+        <label>Billing currency<select id="billingCurrency" onchange="renderBillingPrices()"><option value="INR">India · INR</option><option value="USD">United States · USD</option><option value="GBP">United Kingdom · GBP</option><option value="EUR">Euro area · EUR</option><option value="SGD">Singapore · SGD</option><option value="AED">United Arab Emirates · AED</option><option value="AUD">Australia · AUD</option></select></label>
+      </div>
+      <div id="billingPriceCards" class="stats" style="margin-top:14px"></div>
+      <p id="billingStatus" class="muted" role="status" aria-live="polite">Sign in as the workspace owner to start a subscription.</p>
+      <p class="muted">Enterprise pricing is negotiated. Taxes, payment-provider fees and currency conversion/settlement rules may apply. International subscription payment methods depend on Razorpay account approval.</p>
+    </section>
+
+    <div class="stats">
+
+      <div class="stat">
+
+        <small>Tables discovered</small>
+
+        <strong id="tableCount">—</strong>
+
+      </div>
+
+      <div class="stat">
+
+        <small>Table relationships</small>
+
+        <strong id="relationshipCount">—</strong>
+
+      </div>
+
+      <div class="stat">
+
+        <small>Column mappings</small>
+
+        <strong id="columnCount">—</strong>
+
+      </div>
+
+    </div>
+
+
+
+    <section class="panel">
+
+      <h2>1. SQL Lineage Analyzer</h2>
+
+      <p class="muted">The API parses SQL. It does not execute SQL against a database.</p>
+
+
+
+      <label for="sqlInput">SQL statement</label>
+
+      <textarea id="sqlInput" spellcheck="false">CREATE TABLE order_summary AS
+
+SELECT c.customer_id, o.order_id
+
+FROM customers c
+
+JOIN orders o
+
+ON c.customer_id = o.customer_id;</textarea>
+
+
+
+      <button id="analyzeButton" onclick="analyzeSQL()">Analyze SQL</button>
+
+      <button class="secondary" onclick="loadExample()">Reset example</button>
+
+      <div id="analysisStatus" class="hint" role="status"></div>
+
+
+
+<div class="upload-panel">
+
+  <h3>Upload SQL Files</h3>
+
+  <p class="muted">Upload one or more .sql files or a ZIP archive containing SQL files.</p>
+
+  <label for="projectName">Project name (used to group saved analysis runs)</label>
+  <input id="projectName" value="demo-project" maxlength="80" autocomplete="off">
+
+  <label for="sqlFiles">Select SQL files</label>
+
+  <input id="sqlFiles" type="file" accept=".sql,.zip" multiple>
+
+
+
+  <label for="uploadDialect">SQL dialect (optional)</label>
+
+  <select id="uploadDialect">
+
+    <option value="">Auto / Default</option>
+
+    <option value="postgres">PostgreSQL</option>
+
+    <option value="mysql">MySQL</option>
+
+    <option value="bigquery">BigQuery</option>
+
+    <option value="snowflake">Snowflake</option>
+
+    <option value="tsql">SQL Server (T-SQL)</option>
+
+    <option value="spark">Spark SQL</option>
+  </select>
+  <button id="uploadButton" onclick="uploadSQLFiles()">Upload and Analyze</button>
+
+<p id="uploadStatus" class="muted" role="status">
+
+  Ready to upload a SQL file.
+
+</p>
+</div>
+
+
+
+
+
+
+
+    </section>
+
+    <section class="panel" id="runHistoryPanel">
+      <h3>Saved Project Runs</h3>
+      <p class="muted">Analysis output is stored locally in SQLite. Original uploaded SQL text is not saved.</p>
+      <div class="graph-toolbar">
+        <button type="button" class="secondary" onclick="loadProjectRuns()">Refresh run history</button>
+        <select id="runASelect" aria-label="Earlier analysis run"></select>
+        <select id="runBSelect" aria-label="Later analysis run"></select>
+        <button type="button" onclick="compareSelectedRuns()">Compare runs</button>
+      </div>
+      <div id="runHistoryStatus" class="hint" role="status">Run an analysis to save the first project snapshot.</div>
+      <div id="runHistoryList" class="relationship-list"></div>
+      <pre id="runCompareOutput" class="json-output" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+
+      <h2>2. Visual Table Lineage</h2>
+
+      <p class="muted">Source tables and their relationships to the target table. Select a node to inspect its immediate dependencies.</p>
+
+      <div class="graph-toolbar">
+        <input id="graphSearch" type="search" placeholder="Find a table in the graph…" aria-label="Find a table in the lineage graph">
+        <button type="button" class="secondary" id="clearGraphSearch">Clear search</button>
+        <select id="graphFilter" aria-label="Filter graph objects"><option value="all">All objects</option><option value="connected">Connected objects</option><option value="unresolved">Unresolved objects</option></select>
+        <button type="button" class="secondary" id="graphZoomIn" aria-label="Zoom in">Zoom +</button>
+        <button type="button" class="secondary" id="graphZoomOut" aria-label="Zoom out">Zoom −</button>
+        <button type="button" class="secondary" id="graphFit" aria-label="Fit graph">Fit graph</button>
+        <button type="button" class="secondary" id="graphReset" aria-label="Reset graph selection and filters">Reset</button>
+      </div>
+      <div id="graphCanvas" class="empty" role="region" aria-label="Interactive table lineage graph">Run SQL analysis to display the dependency graph.</div>
+      <div id="graphDetail" class="graph-detail" aria-live="polite">Select a table node to see its upstream and downstream dependencies.</div>
+      <div class="graph-legend"><span>→ Data flows from source to target</span><span>Green node = selected table</span><span>Use mouse or keyboard to select a node</span></div>
+      <div id="lineageView" class="empty">Run SQL analysis to display dependency summaries.</div>
+
+
+
+      <h3>Column-level lineage</h3>
+
+      <div id="columnView" class="empty">Column mappings will appear here after analysis.</div>
+
+
+
+      <h3>Table relationships</h3>
+
+      <div id="relationshipView" class="relationship-list">
+
+        <div class="empty">No analysis results yet.</div>
+
+      </div>
+
+    </section>
+
+
+
+    <section class="columns">
+
+      <div class="panel">
+
+        <h2>3. Schema Impact Checker</h2>
+
+        <p class="muted">Compare column lists to identify removed and added columns.</p>
+
+
+
+        <label for="sourceTable">Source table</label>
+
+        <input id="sourceTable" value="customers">
+
+
+
+        <label for="oldColumns">Old columns (comma-separated)</label>
+
+        <input id="oldColumns" value="customer_id, customer_name, email">
+
+
+
+        <label for="newColumns">New columns (comma-separated)</label>
+
+        <input id="newColumns" value="customer_name, email">
+
+
+
+        <button id="impactButton" onclick="checkImpact()">Check Impact</button>
+
+        <div id="impactStatus" class="hint" role="status"></div>
+
+        <div id="impactView"></div>
+
+      </div>
+
+
+
+      <div class="panel">
+
+        <h2>4. Full API Response</h2>
+
+        <p class="muted">Inspect the detailed JSON returned by the backend.</p>
+
+        <pre id="jsonOutput">Run an analysis to see the response here.</pre>
+
+
+
+<button type="button" onclick="downloadAnalysisReport()">
+
+  Download Analysis Report
+
+</button>
+
+<button type="button" class="secondary" onclick="downloadHTMLReport()">
+
+  Download HTML Report
+
+</button>
+
+      </div>
+
+    </section>
+
+
+
+    <div class="footer">
+
+      DataLineage AI · Local prototype · Review findings before making production changes
+
+    </div>
+
+  </main>
+
+
+
+
+
+<script>
+
+"use strict";
+
+
+
+const API_BASE = ["5500", "5501"].includes(window.location.port) ? "http://127.0.0.1:8000" : window.location.origin;
+
+const $ = (id) => document.getElementById(id);
+
+
+
+let latestAnalysisData = null;
+
+
+
+function setStatus(id, message, type = "") {
+
+  const element = $(id);
+
+  if (!element) {
+
+    console.error("Status element not found:", id);
+
+    return;
+
+  }
+
+  element.textContent = message;
+
+  element.className = "hint " + type;
+
+}
+
+
+
+function showJSON(data) {
+
+  latestAnalysisData = data;
+
+  const output = $("jsonOutput");
+
+  if (output) output.textContent = JSON.stringify(data, null, 2);
+
+}
+
+
+
+function makeElement(tag, className = "", text = "") {
+
+  const element = document.createElement(tag);
+
+  if (className) element.className = className;
+
+  if (text !== undefined) element.textContent = text;
+
+  return element;
+
+}
+
+
+
+function showEmpty(container, message) {
+
+  container.replaceChildren(makeElement("div", "empty", message));
+
+}
+
+
+
+let selectedGraphTable = null;
+let latestGraphData = null;
+let graphZoom = 1;
+
+function svgElement(tag, attrs = {}, text = null) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+  if (text !== null) node.textContent = text;
+  return node;
+}
+
+function graphLayers(nodeNames, edges) {
+  const incoming = new Map(nodeNames.map(name => [name, 0]));
+  const outgoing = new Map(nodeNames.map(name => [name, []]));
+  edges.forEach(edge => {
+    if (incoming.has(edge.source) && incoming.has(edge.target)) {
+      incoming.set(edge.target, incoming.get(edge.target) + 1);
+      outgoing.get(edge.source).push(edge.target);
+    }
+  });
+  const queue = nodeNames.filter(name => incoming.get(name) === 0).sort();
+  const levels = new Map(nodeNames.map(name => [name, 0]));
+  const visited = new Set();
+  while (queue.length) {
+    const current = queue.shift();
+    if (visited.has(current)) continue;
+    visited.add(current);
+    outgoing.get(current).sort().forEach(next => {
+      levels.set(next, Math.max(levels.get(next), levels.get(current) + 1));
+      incoming.set(next, incoming.get(next) - 1);
+      if (incoming.get(next) === 0) queue.push(next);
+    });
+    queue.sort();
+  }
+  // Keep cyclic or otherwise unvisited nodes visible rather than hiding them.
+  const maxLevel = [...levels.values()].reduce((maximum, level) => Math.max(maximum, level), 0);
+  nodeNames.filter(name => !visited.has(name)).sort().forEach((name, index) => levels.set(name, maxLevel + 1 + index % 2));
+  return levels;
+}
+
+function renderGraph(data) {
+  latestGraphData = data;
+  const canvas = $("graphCanvas");
+  const detail = $("graphDetail");
+  if (!canvas || !detail) return;
+  const rawGraph = data.graph || {};
+  const nodes = Array.isArray(rawGraph.nodes) ? rawGraph.nodes : [];
+  const edges = Array.isArray(rawGraph.edges) ? rawGraph.edges.filter(edge => edge && edge.source && edge.target) : [];
+  const nodeNames = [...new Set([
+    ...nodes.map(node => typeof node === "string" ? node : node && node.id).filter(Boolean),
+    ...edges.flatMap(edge => [edge.source, edge.target]),
+    ...(Array.isArray(data.tables) ? data.tables : [])
+  ])].sort();
+
+  canvas.replaceChildren();
+  if (!nodeNames.length) {
+    showEmpty(canvas, "No table nodes were found. Try analyzing CREATE TABLE … AS SELECT or INSERT … SELECT SQL.");
+    detail.textContent = "No table selected.";
+    return;
+  }
+
+  if (!selectedGraphTable || !nodeNames.includes(selectedGraphTable)) selectedGraphTable = nodeNames[0];
+  const layers = graphLayers(nodeNames, edges);
+  const grouped = new Map();
+  nodeNames.forEach(name => {
+    const layer = layers.get(name) || 0;
+    if (!grouped.has(layer)) grouped.set(layer, []);
+    grouped.get(layer).push(name);
+  });
+  const layerNumbers = [...grouped.keys()].sort((a, b) => a - b);
+  const nodeWidth = 184, nodeHeight = 58, gapX = 92, gapY = 36, margin = 32;
+  const positions = new Map();
+  let maxRows = 1;
+  layerNumbers.forEach(layer => { grouped.get(layer).sort(); maxRows = Math.max(maxRows, grouped.get(layer).length); });
+  layerNumbers.forEach((layer, layerIndex) => {
+    const items = grouped.get(layer);
+    items.forEach((name, index) => positions.set(name, {
+      x: margin + layerIndex * (nodeWidth + gapX),
+      y: margin + index * (nodeHeight + gapY) + ((maxRows - items.length) * (nodeHeight + gapY)) / 2
+    }));
+  });
+  const width = margin * 2 + Math.max(1, layerNumbers.length) * nodeWidth + Math.max(0, layerNumbers.length - 1) * gapX;
+  const height = margin * 2 + maxRows * nodeHeight + Math.max(0, maxRows - 1) * gapY;
+  const svg = svgElement("svg", { class: "lineage-svg", viewBox: `0 0 ${width} ${height}`, width, height, role: "img", "aria-label": `Lineage graph with ${nodeNames.length} tables and ${edges.length} relationships` });
+  const defs = svgElement("defs");
+  const marker = svgElement("marker", { id: "lineageArrowHead", markerWidth: 8, markerHeight: 8, refX: 6, refY: 3, orient: "auto", markerUnits: "strokeWidth" });
+  marker.appendChild(svgElement("path", { d: "M0,0 L0,6 L6,3 z", fill: "#7187b7" }));
+  defs.appendChild(marker); svg.appendChild(defs);
+
+  edges.forEach(edge => {
+    const from = positions.get(edge.source), to = positions.get(edge.target);
+    if (!from || !to) return;
+    const startX = from.x + nodeWidth, startY = from.y + nodeHeight / 2;
+    const endX = to.x, endY = to.y + nodeHeight / 2;
+    const midX = startX + Math.max(20, (endX - startX) / 2);
+    const path = svgElement("path", { class: "graph-edge", d: `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX - 5} ${endY}`, "marker-end": "url(#lineageArrowHead)", tabindex: 0, role: "button", "aria-label": `Dependency from ${edge.source} to ${edge.target}` });
+    const inspect = () => {
+      detail.replaceChildren(makeElement("strong", "", `${edge.source} → ${edge.target}`));
+      const relationship = (data.relationships || []).find(item => item.source_table === edge.source && item.target_table === edge.target);
+      detail.appendChild(makeElement("p", "muted", relationship ? `Operation: ${relationship.operation || relationship.relationship_type || "dependency"} · Status: ${relationship.resolution_status || relationship.confidence || "not specified"}` : "Table dependency detected in the analyzed SQL."));
+      if (relationship?.source_file) detail.appendChild(makeElement("p", "", `File: ${relationship.source_file}${relationship.line ? ` · Line ${relationship.line}` : ""}`));
+      if (relationship?.evidence) detail.appendChild(makeElement("pre", "", relationship.evidence));
+    };
+    path.addEventListener("click", inspect);
+    path.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); inspect(); } });
+    svg.appendChild(path);
+  });
+
+  const dependencies = data.dependencies || {};
+  nodeNames.forEach(name => {
+    const pos = positions.get(name);
+    const group = svgElement("g", { class: "graph-node-group", tabindex: 0, role: "button", "aria-label": `Inspect table ${name}`, "data-table": name });
+    group.appendChild(svgElement("title", {}, name));
+    group.appendChild(svgElement("rect", { class: "graph-node" + (name === selectedGraphTable ? " selected" : ""), x: pos.x, y: pos.y, width: nodeWidth, height: nodeHeight, rx: 10 }));
+    const label = name.length > 25 ? name.slice(0, 22) + "…" : name;
+    group.appendChild(svgElement("text", { class: "graph-label", x: pos.x + nodeWidth / 2, y: pos.y + 25 }, label));
+    group.appendChild(svgElement("text", { class: "graph-subtitle", x: pos.x + nodeWidth / 2, y: pos.y + 43 }, `${(dependencies.upstream?.[name] || []).length} upstream · ${(dependencies.downstream?.[name] || []).length} downstream`));
+    const choose = () => {
+      selectedGraphTable = name;
+      renderGraph(latestGraphData);
+      renderGraphDetail(name, latestGraphData);
+    };
+    group.addEventListener("click", choose);
+    group.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(); } });
+    svg.appendChild(group);
+  });
+  const search = $("graphSearch")?.value.trim().toLowerCase();
+  const filter = $("graphFilter")?.value || "all";
+  const related = new Set([selectedGraphTable, ...(dependencies.upstream?.[selectedGraphTable] || []), ...(dependencies.downstream?.[selectedGraphTable] || [])]);
+  const unresolvedTables = new Set((data.unresolved_references || []).map(item => item.target_table).filter(Boolean));
+  [...svg.querySelectorAll(".graph-node-group")].forEach(group => {
+    const name = group.getAttribute("data-table");
+    const matchesSearch = !search || name.toLowerCase().includes(search);
+    const matchesFilter = filter === "all" || (filter === "connected" && related.has(name)) || (filter === "unresolved" && unresolvedTables.has(name));
+    group.classList.toggle("is-muted", !matchesSearch || !matchesFilter);
+    group.classList.toggle("is-related", related.has(name) && name !== selectedGraphTable);
+    group.classList.toggle("is-search-match", Boolean(search && matchesSearch));
+  });
+  [...svg.querySelectorAll(".graph-edge")].forEach(path => {
+    const edge = path.getAttribute("aria-label") || "";
+    const isRelated = edge.includes(`from ${selectedGraphTable} `) || edge.includes(`to ${selectedGraphTable}`);
+    path.classList.toggle("is-related", isRelated);
+    path.classList.toggle("is-muted", Boolean(selectedGraphTable) && !isRelated);
+  });
+  svg.style.transformOrigin = "top left";
+  svg.style.transform = `scale(${graphZoom})`;
+  const shell = makeElement("div", "graph-shell");
+  shell.style.maxHeight = "620px";
+  shell.style.overflow = "auto";
+  shell.appendChild(svg);
+  canvas.appendChild(shell);
+  renderGraphDetail(selectedGraphTable, data);
+  bindGraphControls();
+}
+
+function bindGraphControls() {
+  const rerender = () => { if (latestGraphData) renderGraph(latestGraphData); };
+  const bindClick = (id, action) => { const el = $(id); if (el && !el.dataset.graphBound) { el.addEventListener("click", action); el.dataset.graphBound = "1"; } };
+  bindClick("graphZoomIn", () => { graphZoom = Math.min(2.2, graphZoom + 0.15); rerender(); });
+  bindClick("graphZoomOut", () => { graphZoom = Math.max(0.45, graphZoom - 0.15); rerender(); });
+  bindClick("graphFit", () => { graphZoom = 1; rerender(); $("graphCanvas")?.querySelector(".graph-shell")?.scrollTo({left:0,top:0}); });
+  bindClick("graphReset", () => { graphZoom = 1; selectedGraphTable = null; if ($("graphSearch")) $("graphSearch").value = ""; if ($("graphFilter")) $("graphFilter").value = "all"; rerender(); });
+  const search = $("graphSearch");
+  if (search && !search.dataset.graphBound) { search.addEventListener("input", rerender); search.dataset.graphBound = "1"; }
+  const clearSearch = $("clearGraphSearch");
+  if (clearSearch && !clearSearch.dataset.graphBound) { clearSearch.addEventListener("click", () => { if (search) search.value = ""; rerender(); }); clearSearch.dataset.graphBound = "1"; }
+  const filter = $("graphFilter");
+  if (filter && !filter.dataset.graphBound) { filter.addEventListener("change", rerender); filter.dataset.graphBound = "1"; }
+}
+
+function renderGraphDetail(name, data) {
+  const detail = $("graphDetail");
+  if (!detail || !name) return;
+  const dependencies = data.dependencies || {};
+  const upstream = dependencies.upstream?.[name] || [];
+  const downstream = dependencies.downstream?.[name] || [];
+  detail.replaceChildren(makeElement("strong", "", name));
+  detail.appendChild(makeElement("p", "muted", "Upstream objects are sources this table depends on; downstream objects may be affected by a change to this table."));
+  const relatedColumns = (data.column_lineage || []).filter(item => item.source_table === name || item.target_table === name);
+  if (relatedColumns.length) {
+    detail.appendChild(makeElement("h4", "", "Column-level lineage"));
+    const columnList = makeElement("ul");
+    relatedColumns.slice(0, 100).forEach(item => {
+      const source = `${item.source_table || "?"}.${item.source_column || "?"}`;
+      const target = `${item.target_table || "?"}.${item.target_column || "?"}`;
+      const status = item.resolution_status || item.confidence || "not specified";
+      const evidence = item.evidence ? ` · ${String(item.evidence).slice(0, 180)}` : "";
+      columnList.appendChild(makeElement("li", "", `${source} → ${target} · ${item.transformation_type || "mapping"} · ${status}${evidence}`));
+    });
+    detail.appendChild(columnList);
+  }
+  [["Upstream dependencies", upstream], ["Downstream impacts", downstream]].forEach(([heading, items]) => {
+    detail.appendChild(makeElement("h4", "", heading));
+    if (!items.length) detail.appendChild(makeElement("p", "muted", "None detected in the supplied SQL."));
+    else {
+      const list = makeElement("ul");
+      items.forEach(item => list.appendChild(makeElement("li", "", item)));
+      detail.appendChild(list);
+    }
+  });
+}
+
+function renderLineage(data) {
+
+  renderGraph(data);
+  const tables = Array.isArray(data.tables) ? data.tables : [];
+
+  const relationships = Array.isArray(data.relationships)
+
+    ? data.relationships : [];
+
+  const mappings = Array.isArray(data.column_lineage)
+
+    ? data.column_lineage : [];
+
+
+
+  $("tableCount").textContent = tables.length;
+
+  $("relationshipCount").textContent = relationships.length;
+
+  $("columnCount").textContent = mappings.length;
+
+
+
+  const lineage = $("lineageView");
+
+  lineage.replaceChildren();
+
+
+
+  const graph = data.graph || { nodes: [], edges: [] };
+  const dependencies = data.dependencies || {};
+  const upstream = dependencies.upstream || {};
+  const downstream = dependencies.downstream || {};
+  const dependencyPanel = makeElement("section", "dependency-summary");
+  dependencyPanel.appendChild(makeElement("h3", "", "Upstream dependencies"));
+  const upstreamList = makeElement("ul", "dependency-list");
+  Object.keys(upstream).sort().forEach(name => {
+    const values = Array.isArray(upstream[name]) ? upstream[name] : [];
+    const li = makeElement("li", "", `${name}: ${values.length ? values.join(" → ") : "no upstream objects detected"}`);
+    upstreamList.appendChild(li);
+  });
+  dependencyPanel.appendChild(upstreamList);
+  dependencyPanel.appendChild(makeElement("h3", "", "Downstream impacts"));
+  const downstreamList = makeElement("ul", "dependency-list");
+  Object.keys(downstream).sort().forEach(name => {
+    const values = Array.isArray(downstream[name]) ? downstream[name] : [];
+    downstreamList.appendChild(makeElement("li", "", `${name}: ${values.length ? values.join(" → ") : "no downstream objects detected"}`));
+  });
+  dependencyPanel.appendChild(downstreamList);
+  if (Object.keys(upstream).length || Object.keys(downstream).length) lineage.appendChild(dependencyPanel);
+
+  if (!relationships.length) {
+
+    lineage.appendChild(makeElement("div", "empty", "No table relationships were detected."));
+
+  } else {
+
+    const sources = [...new Set(
+
+      relationships.map(r => r.source_table).filter(Boolean)
+
+    )];
+
+    const targets = [...new Set(
+
+      relationships.map(r => r.target_table).filter(Boolean)
+
+    )];
+
+
+
+    lineage.appendChild(makeElement("h3", "", "Source tables"));
+
+    const sourceList = makeElement("div", "table-list");
+
+    sources.forEach(name => {
+
+      const node = makeElement("div", "table-node");
+
+      node.appendChild(makeElement("strong", "", name));
+
+      node.appendChild(makeElement("small", "", "Source table"));
+
+      sourceList.appendChild(node);
+
+    });
+
+    lineage.appendChild(sourceList);
+
+    lineage.appendChild(makeElement("div", "arrow", "↓ data flows to ↓"));
+
+    lineage.appendChild(makeElement("h3", "", "Target tables"));
+
+
+
+    const targetList = makeElement("div", "table-list");
+
+    targets.forEach(name => {
+
+      const node = makeElement("div", "table-node");
+
+      node.appendChild(makeElement("strong", "", name));
+
+      node.appendChild(makeElement("small", "", "Target table"));
+
+      targetList.appendChild(node);
+
+    });
+
+    lineage.appendChild(targetList);
+
+  }
+
+
+
+  const columnView = $("columnView");
+
+  columnView.replaceChildren();
+
+
+
+  if (!mappings.length) {
+
+    showEmpty(columnView, "No direct column mappings were detected.");
+
+  } else {
+
+    const list = makeElement("div", "mapping-list");
+
+    mappings.forEach(mapping => {
+
+      const card = makeElement("div", "mapping");
+
+      const flow = makeElement("div", "flow");
+
+      flow.appendChild(makeElement("code", "",
+
+        `${mapping.source_table}.${mapping.source_column}`));
+
+      flow.appendChild(makeElement("span", "", "→"));
+
+      flow.appendChild(makeElement("code", "",
+
+        `${mapping.target_table}.${mapping.target_column}`));
+
+      card.appendChild(flow);
+
+      card.appendChild(makeElement("small", "",
+
+        "Confidence: " + (mapping.confidence || "unspecified") +
+        " · Transformation: " + (mapping.transformation || "direct")));
+
+      if (mapping.expression_sql && mapping.transformation === "expression") {
+        card.appendChild(makeElement("code", "expression-evidence",
+          mapping.expression_sql));
+      }
+
+      if (mapping.confidence === "unresolved") {
+        card.appendChild(makeElement("small", "muted",
+          mapping.reason || "Source column could not be resolved safely."));
+      }
+
+      list.appendChild(card);
+
+    });
+
+    columnView.appendChild(list);
+
+  }
+
+
+
+  const relationshipView = $("relationshipView");
+
+  relationshipView.replaceChildren();
+
+
+
+  if (!relationships.length) {
+
+    showEmpty(relationshipView, "No relationships found.");
+
+  } else {
+
+    relationships.forEach(rel => {
+
+      const card = makeElement("div", "relationship");
+
+      card.appendChild(makeElement("strong", "",
+
+        `${rel.source_table} → ${rel.target_table}`));
+
+      card.appendChild(makeElement("small", "",
+
+        `${rel.relationship_type || "relationship"} · ${rel.scope || "table-level"}`));
+
+      relationshipView.appendChild(card);
+
+    });
+
+  }
+
+}
+
+let activeOrganizationId = localStorage.getItem("datalineage_active_org") || "";
+
+async function requestJSON(url, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (activeOrganizationId) headers["X-Organization-ID"] = activeOrganizationId;
+  const response = await fetch(url, { ...options, headers });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+
+      typeof data.detail === "string"
+
+        ? data.detail
+
+        : JSON.stringify(data.detail || data)
+
+    );
+
+  }
+
+  return data;
+
+}
+
+
+
+let authMode = "login";
+
+function setAuthMode(mode) {
+  authMode = mode === "signup" ? "signup" : "login";
+  const signup = authMode === "signup";
+  $("authKicker").textContent = signup ? "Get started" : "Welcome back";
+  $("authTitle").textContent = signup ? "Create your account" : "Sign in to your workspace";
+  $("authDescription").textContent = signup
+    ? "Create your account to explore SQL lineage, saved projects, and schema impact reports."
+    : "Sign in to explore your SQL lineage, saved projects, and schema impact reports.";
+  $("authEmailLabel").textContent = signup ? "Work email address" : "Email address or admin username";
+  $("authEmail").type = signup ? "email" : "text";
+  $("authEmail").autocomplete = signup ? "email" : "username";
+  $("authEmail").placeholder = signup ? "you@company.com" : "you@example.com or admin";
+  $("authPassword").autocomplete = signup ? "new-password" : "current-password";
+  $("authPassword").minLength = signup ? 12 : 1;
+  $("authPasswordHint").textContent = signup ? "Use at least 12 characters. Avoid reusing a password from another site." : "Use your account password to continue.";
+  $("confirmPasswordGroup").style.display = signup ? "block" : "none";
+  $("authConfirmPassword").required = signup;
+  $("authSubmit").textContent = signup ? "Create account" : "Sign in securely";
+  $("authSwitchLine").innerHTML = signup
+    ? 'Already have an account? <button id="authSwitch" class="auth-switch" type="button">Sign in</button>'
+    : 'New to DataLineage AI? <button id="authSwitch" class="auth-switch" type="button">Create an account</button>';
+  $("authError").textContent = "";
+  $("recoveryPanel").style.display = "none";
+  $("primaryAuthFields").style.display = "block";
+  $("verificationActions").style.display = "none";
+  $("loginActions").style.display = "flex";
+  $("authSwitchLine").style.display = "block";
+  $("authForgot").style.display = signup ? "none" : "inline-block";
+  $("authEmail").required = true;
+  $("authPassword").required = true;
+  $("authConfirmPassword").required = signup;
+  // Reset password visibility each time the form mode changes.
+  document.querySelectorAll(".auth-toggle-password").forEach((button) => {
+    const target = $(button.dataset.passwordTarget);
+    if (target) target.type = "password";
+    button.textContent = "Show";
+    button.setAttribute("aria-label", button.dataset.passwordTarget === "authConfirmPassword" ? "Show confirm password" : "Show password");
+    button.setAttribute("aria-pressed", "false");
+  });
+  $("authSwitch").addEventListener("click", () => setAuthMode(signup ? "login" : "signup"));
+}
+
+async function initAuth() {
+  const overlay = $("authOverlay");
+  try {
+    const response = await fetch(`${API_BASE}/auth/status`, { cache: "no-store", credentials: "same-origin" });
+    const status = await response.json();
+    if (status.enabled) {
+      $("logoutButton").style.display = status.authenticated ? "inline-block" : "none";
+      $("logoutButton").textContent = status.authenticated ? `Sign out${status.username ? " (" + status.username + ")" : ""}` : "Sign out";
+      if (!status.authenticated) {
+        setAuthMode("login");
+        overlay.style.display = "flex";
+      } else {
+        overlay.style.display = "none";
+      }
+    }
+  } catch (error) {
+    console.warn("Could not check authentication status", error);
+  }
+}
+
+async function logoutUser() {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: "POST" });
+    const status = await (await fetch(`${API_BASE}/auth/status`, { cache: "no-store" })).json();
+    if (status.enabled && !status.authenticated) {
+      setAuthMode("login");
+      $("authOverlay").style.display = "flex";
+    }
+  } catch (error) {
+    setStatus("analysisStatus", "Could not sign out: " + error.message, "error");
+  }
+}
+
+document.querySelectorAll(".auth-toggle-password").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = $(button.dataset.passwordTarget);
+    if (!input) return;
+    const showing = input.type === "password";
+    input.type = showing ? "text" : "password";
+    button.textContent = showing ? "Hide" : "Show";
+    button.setAttribute("aria-label", `${showing ? "Hide" : "Show"} ${button.dataset.passwordTarget === "authConfirmPassword" ? "confirm password" : "password"}`);
+    button.setAttribute("aria-pressed", String(showing));
+    input.focus({ preventScroll: true });
+  });
+});
+
+$("authForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const signup = authMode === "signup";
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+  if (signup && password !== $("authConfirmPassword").value) {
+    $("authError").textContent = "Passwords do not match.";
+    return;
+  }
+  if (signup && password.length < 12) {
+    $("authError").textContent = "Use a password with at least 12 characters.";
+    return;
+  }
+  $("authError").textContent = signup ? "Creating account..." : "Signing in...";
+  $("authSubmit").disabled = true;
+  try {
+    const response = await fetch(`${API_BASE}/auth/${signup ? "signup" : "login"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      cache: "no-store",
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || (signup ? "Signup failed" : "Sign-in failed"));
+    $("authPassword").value = "";
+    $("authConfirmPassword").value = "";
+    if (signup && data.status === "verification_required") {
+      $("authError").textContent = data.message || "Check your email for a verification link before signing in.";
+      $("verificationActions").style.display = "block";
+      if (data.development_url) {
+        const link = document.createElement("a");
+        link.href = data.development_url;
+        link.textContent = "Open development verification link";
+        link.className = "auth-dev-link";
+        link.rel = "noopener noreferrer";
+        $("authError").appendChild(document.createElement("br"));
+        $("authError").appendChild(link);
+      }
+      return;
+    }
+    $("authOverlay").style.display = "none";
+    $("logoutButton").style.display = "inline-block";
+    $("logoutButton").textContent = `Sign out (${data.email || email})`;
+    setStatus("analysisStatus", "Signed in successfully.", "success");
+    await processAuthLink();
+    if (typeof dlLoadOrganizations === "function") await dlLoadOrganizations();
+    if (typeof loadAccountSummary === "function" && $("accountDrawer")?.classList.contains("is-open")) await loadAccountSummary();
+  } catch (error) {
+    $("authError").textContent = error.message;
+  } finally {
+    $("authSubmit").disabled = false;
+  }
+});
+
+let recoveryToken = null;
+
+$("authForgot")?.addEventListener("click", () => {
+  $("authError").textContent = "";
+  $("loginActions").style.display = "none";
+  $("authSwitchLine").style.display = "none";
+  $("confirmPasswordGroup").style.display = "none";
+  $("primaryAuthFields").style.display = "none";
+  $("authEmail").required = false;
+  $("authPassword").required = false;
+  $("recoveryPanel").style.display = "block";
+  $("recoveryTitle").textContent = "Reset your password";
+  $("recoveryDescription").textContent = "Enter your account email. If a verified account exists, we will send a reset link.";
+  $("resetPasswordFields").style.display = "none";
+  $("recoveryAction").textContent = "Send reset link";
+  $("recoveryEmail").value = $("authEmail").value.includes("@") ? $("authEmail").value : "";
+});
+
+$("recoveryBack")?.addEventListener("click", () => {
+  recoveryToken = null;
+  setAuthMode("login");
+});
+
+$("recoveryAction")?.addEventListener("click", async () => {
+  const email = $("recoveryEmail").value.trim();
+  const action = $("recoveryAction");
+  action.disabled = true;
+  $("authError").textContent = "Processing request...";
+  try {
+    if (recoveryToken) {
+      const password = $("recoveryPassword").value;
+      if (password.length < 12 || password.length > 256) throw new Error("Password must be between 12 and 256 characters.");
+      if (password !== $("recoveryConfirmPassword").value) throw new Error("Passwords do not match.");
+      const data = await requestJSON(`${API_BASE}/auth/password-reset/confirm`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: recoveryToken, password }), cache: "no-store"
+      });
+      recoveryToken = null;
+      const cleanUrl = new URL(window.location.href); cleanUrl.searchParams.delete("reset_token"); window.history.replaceState({}, "", cleanUrl);
+      $("authError").textContent = data.message || "Password updated. Please sign in.";
+      setAuthMode("login");
+      $("authError").textContent = data.message || "Password updated. Please sign in.";
+    } else {
+      const data = await requestJSON(`${API_BASE}/auth/password-reset/request`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }), cache: "no-store"
+      });
+      $("authError").textContent = data.message || "If an account exists, a reset link will be sent.";
+      if (data.development_url) {
+        const link = document.createElement("a"); link.href = data.development_url; link.textContent = "Open development reset link"; link.className = "auth-dev-link"; link.rel = "noopener noreferrer";
+        $("authError").appendChild(document.createElement("br")); $("authError").appendChild(link);
+      }
+    }
+  } catch (error) { $("authError").textContent = error.message; }
+  finally { action.disabled = false; }
+});
+
+$("resendVerification")?.addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  if (!email.includes("@")) { $("authError").textContent = "Enter your email address above first."; return; }
+  const button = $("resendVerification"); button.disabled = true;
+  try {
+    const data = await requestJSON(`${API_BASE}/auth/verification/request`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }), cache: "no-store" });
+    $("authError").textContent = data.message || "If the account needs verification, a link will be sent.";
+    if (data.development_url) { const link = document.createElement("a"); link.href = data.development_url; link.textContent = "Open development verification link"; link.className = "auth-dev-link"; link.rel = "noopener noreferrer"; $("authError").appendChild(document.createElement("br")); $("authError").appendChild(link); }
+  } catch (error) { $("authError").textContent = error.message; }
+  finally { button.disabled = false; }
+});
+
+async function processAuthLink() {
+  const url = new URL(window.location.href);
+  const fragment = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+  // New links use fragments so bearer tokens are not sent in HTTP requests or access logs.
+  // Query support remains for verification/reset emails issued by older local versions.
+  const verifyToken = fragment.get("verify_token") || url.searchParams.get("verify_token");
+  const resetToken = fragment.get("reset_token") || url.searchParams.get("reset_token");
+  const organizationInviteToken = fragment.get("organization_invite");
+  if (organizationInviteToken) {
+    const authStatus = await fetch(`${API_BASE}/auth/status`, { cache: "no-store" }).then(r => r.json()).catch(() => ({ authenticated: false }));
+    if (!authStatus.authenticated) {
+      $("authOverlay").style.display = "flex";
+      $("authError").textContent = "Sign in with the invited email address to accept this organization invitation.";
+    } else {
+      url.hash = ""; window.history.replaceState({}, "", url);
+      try {
+        const accepted = await requestJSON(`${API_BASE}/api/v1/organizations/invitations/accept`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: organizationInviteToken }), cache: "no-store" });
+        $("authError").textContent = `Invitation accepted. You joined ${accepted.name}.`;
+        if (typeof dlLoadOrganizations === "function") await dlLoadOrganizations();
+      } catch (error) {
+        $("authOverlay").style.display = "flex";
+        $("authError").textContent = `Invitation could not be accepted: ${error.message}`;
+      }
+    }
+  }
+  if (verifyToken) {
+    // Remove bearer tokens from the visible URL/history before making the API call.
+    url.searchParams.delete("verify_token"); url.hash = ""; window.history.replaceState({}, "", url);
+    $("authOverlay").style.display = "flex"; setAuthMode("login"); $("authError").textContent = "Verifying your email...";
+    try {
+      const data = await requestJSON(`${API_BASE}/auth/verify-email`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: verifyToken }), cache: "no-store" });
+      $("authError").textContent = data.message || "Email verified. You can now sign in.";
+    } catch (error) {
+      $("authError").textContent = error.message;
+      $("verificationActions").style.display = "block";
+    }
+  }
+  if (resetToken) {
+    $("authOverlay").style.display = "flex"; setAuthMode("login");
+    $("loginActions").style.display = "none"; $("authSwitchLine").style.display = "none";
+    $("primaryAuthFields").style.display = "none";
+    $("authEmail").required = false; $("authPassword").required = false;
+    $("recoveryPanel").style.display = "block"; $("resetPasswordFields").style.display = "block";
+    $("recoveryTitle").textContent = "Choose a new password"; $("recoveryDescription").textContent = "Use a new password with 12–256 characters.";
+    $("recoveryAction").textContent = "Update password"; $("recoveryEmail").style.display = "none"; $("recoveryTokenHint")?.remove();
+    recoveryToken = resetToken; url.searchParams.delete("reset_token"); url.hash = ""; window.history.replaceState({}, "", url);
+    $("authError").textContent = "This reset link is single-use and expires soon.";
+  }
+}
+
+async function checkAPI() {
+
+  const button = $("apiButton");
+
+  button.disabled = true;
+
+  setStatus("analysisStatus", "Checking backend connection...");
+
+
+
+  try {
+
+    await requestJSON(`${API_BASE}/openapi.json`);
+
+    setStatus("analysisStatus", "Backend connection successful.", "success");
+
+  } catch (error) {
+
+    setStatus("analysisStatus",
+
+      "API connection failed: " + error.message +
+
+      ". Make sure FastAPI is running at " + API_BASE + ".", "error");
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+
+async function analyzeSQL() {
+
+  const button = $("analyzeButton");
+
+  const sql = $("sqlInput").value.trim();
+
+
+
+  if (!sql) {
+
+    setStatus("analysisStatus", "Enter a SQL statement first.", "error");
+
+    return;
+
+  }
+
+
+
+  button.disabled = true;
+
+  setStatus("analysisStatus", "Analyzing SQL...");
+
+
+
+  try {
+
+    const data = await requestJSON(`${API_BASE}/api/v1/analyze/text`, {
+
+      method: "POST",
+
+      headers: { "Content-Type": "application/json" },
+
+      body: JSON.stringify({ sql, project_name: currentProjectName() })
+
+    });
+
+
+
+    showJSON(data);
+
+    renderLineage(data);
+
+    setStatus("analysisStatus",
+
+      "SQL analysis successful. Results saved to project history.", "success");
+    await loadProjectRuns();
+
+  } catch (error) {
+
+    setStatus("analysisStatus", "Analysis failed: " + error.message, "error");
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+}
+
+function parseColumns(value) {
+  return value.split(",").map(c => c.trim()).filter(Boolean);
+
+}
+
+async function checkImpact() {
+
+  const button = $("impactButton");
+  const sourceTable = $("sourceTable").value.trim();
+  const oldColumns = parseColumns($("oldColumns").value);
+  const newColumns = parseColumns($("newColumns").value);
+
+  if (!sourceTable || !oldColumns.length || !newColumns.length) {
+
+    setStatus("impactStatus",
+
+      "Enter the source table and both column lists.", "error");
+
+    return;
+
+  }
+
+  button.disabled = true;
+
+  setStatus("impactStatus", "Comparing schema...");
+
+
+
+  try {
+
+    const data = await requestJSON(`${API_BASE}/api/v1/schema/impact`, {
+
+      method: "POST",
+
+      headers: { "Content-Type": "application/json" },
+
+      body: JSON.stringify({
+
+        source_table: sourceTable,
+
+        old_columns: oldColumns,
+
+        new_columns: newColumns,
+
+        column_lineage: latestAnalysisData && Array.isArray(latestAnalysisData.column_lineage)
+          ? latestAnalysisData.column_lineage : [],
+        graph: latestAnalysisData && latestAnalysisData.graph
+          ? latestAnalysisData.graph : undefined
+
+      })
+
+    });
+
+
+
+    showJSON(data);
+
+    const view = $("impactView");
+    view.replaceChildren();
+    const summary = makeElement("div", "impact-summary");
+    summary.appendChild(makeElement("h3", "", `Impact: ${(data.severity || "unknown").toUpperCase()}`));
+    summary.appendChild(makeElement("p", "", data.explanation || data.status || "Schema comparison complete."));
+    const removed = data.removed_columns || [];
+    const added = data.added_columns || [];
+    summary.appendChild(makeElement("p", "", `Removed: ${removed.length ? removed.join(", ") : "none"} · Added: ${added.length ? added.join(", ") : "none"}`));
+    const affected = data.downstream_objects || [];
+    summary.appendChild(makeElement("h4", "", "Potentially affected downstream objects"));
+    if (!affected.length) summary.appendChild(makeElement("p", "muted", (data.affected_tables || []).length ? (data.affected_tables || []).join(", ") : "No supported downstream impacts found in the supplied metadata."));
+    affected.forEach(item => {
+      const card = makeElement("div", "mapping");
+      card.appendChild(makeElement("strong", "", `${item.object} · ${item.severity}`));
+      card.appendChild(makeElement("p", "", item.reason));
+      card.appendChild(makeElement("small", "", `Depth ${item.depth} · confidence ${item.confidence}`));
+      summary.appendChild(card);
+    });
+    if ((data.possible_renames || []).length) {
+      summary.appendChild(makeElement("h4", "", "Possible rename (unconfirmed)"));
+      data.possible_renames.forEach(item => summary.appendChild(makeElement("p", "", `${item.old_column} → ${item.new_column}: ${item.reason}`)));
+    }
+    summary.appendChild(makeElement("details", "impact-json", ""));
+    const details = summary.querySelector("details");
+    details.appendChild(makeElement("summary", "", "Show full JSON response"));
+    details.appendChild(makeElement("pre", "", JSON.stringify(data, null, 2)));
+    view.appendChild(summary);
+    setStatus("impactStatus", "Schema comparison successful. Review heuristic and transitive findings before making changes.", "success");
+
+  } catch (error) {
+
+    setStatus("impactStatus", "Schema check failed: " + error.message, "error");
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+}
+
+async function uploadSQLFiles() {
+  const input = $("sqlFiles");
+  const button = $("uploadButton");
+  const files = Array.from(input.files || []);
+  const dialect = $("uploadDialect").value;
+
+
+
+  if (!files.length) {
+
+    setStatus("uploadStatus",
+
+      "Please select at least one .sql or .zip file.", "error");
+
+    return;
+
+  }
+
+  const invalid = files.filter(file => !/\.(sql|zip)$/i.test(file.name));
+
+  if (invalid.length) {
+
+    setStatus("uploadStatus",
+
+      "Only .sql and .zip files are allowed.", "error");
+
+    return;
+
+  }
+
+  const formData = new FormData();
+
+  files.forEach(file => formData.append("files", file));
+
+  formData.append("dialect", dialect);
+  formData.append("project_name", currentProjectName());
+
+  button.disabled = true;
+
+  setStatus("uploadStatus",
+
+    `Uploading ${files.length} file(s) and analyzing...`);
+
+  try {
+
+    const data = await requestJSON(`${API_BASE}/api/v1/analyze`, {
+
+      method: "POST",
+
+      body: formData
+
+    });
+
+    showJSON(data);
+
+    renderLineage(data);
+    const parsed = data.files_parsed;
+
+    const errors = data.files_with_errors;
+
+    let message = `Upload successful: ${files.length} file(s) selected. Analysis completed.`;
+    if (parsed !== undefined) message += ` ${parsed} file(s) parsed.`;
+    if (errors !== undefined) message += ` ${errors} file(s) with errors.`;
+
+    if (data.run && data.run.run_id) message += ` Saved run: ${data.run.run_id.slice(0, 8)}.`;
+    setStatus("uploadStatus", message, "success");
+    await loadProjectRuns();
+
+  } catch (error) {
+
+    setStatus("uploadStatus", "Upload failed: " + error.message, "error");
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+}
+
+function currentProjectName() {
+  const value = ($("projectName")?.value || "demo-project").trim();
+  return value || "demo-project";
+}
+
+async function loadProjectRuns() {
+  const project = currentProjectName();
+  const list = $("runHistoryList");
+  if (project.length > 80) {
+    setStatus("runHistoryStatus", "Project name must contain at most 80 characters.", "error");
+    return;
+  }
+  try {
+    const data = await requestJSON(`${API_BASE}/api/v1/projects/${encodeURIComponent(project)}/runs`);
+    const selectA = $("runASelect");
+    const selectB = $("runBSelect");
+    selectA.replaceChildren();
+    selectB.replaceChildren();
+    list.replaceChildren();
+    data.runs.forEach((run) => {
+      const label = `${run.created_at} · ${run.tables_count} tables · ${run.files_with_errors} file errors · ${run.run_id.slice(0, 8)}`;
+      [selectA, selectB].forEach((select) => {
+        const option = makeElement("option", "", label);
+        option.value = run.run_id;
+        select.appendChild(option);
+      });
+      const row = makeElement("div", "relationship");
+      row.appendChild(makeElement("strong", "", label));
+      row.appendChild(makeElement("small", "", `${run.files_scanned} file(s) analyzed`));
+      const loadButton = makeElement("button", "secondary", "Open result");
+      loadButton.type = "button";
+      loadButton.addEventListener("click", () => loadSavedRun(run.run_id));
+      row.appendChild(loadButton);
+      list.appendChild(row);
+    });
+    if (data.runs.length >= 2) {
+      selectA.selectedIndex = 1;
+      selectB.selectedIndex = 0;
+    }
+    setStatus("runHistoryStatus", data.runs.length
+      ? `Loaded ${data.runs.length} saved run(s) for project “${project}”.`
+      : `No saved runs for “${project}” yet. Analyze SQL to create one.`, "success");
+  } catch (error) {
+    setStatus("runHistoryStatus", "Could not load run history: " + error.message, "error");
+  }
+}
+
+async function loadSavedRun(runId) {
+  try {
+    const saved = await requestJSON(`${API_BASE}/api/v1/runs/${encodeURIComponent(runId)}`);
+    showJSON(saved.result);
+    renderLineage(saved.result);
+    setStatus("runHistoryStatus", `Loaded saved run ${saved.run_id.slice(0, 8)} from ${saved.created_at}.`, "success");
+  } catch (error) {
+    setStatus("runHistoryStatus", "Could not open saved run: " + error.message, "error");
+  }
+}
+
+async function compareSelectedRuns() {
+  const runA = $("runASelect").value;
+  const runB = $("runBSelect").value;
+  if (!runA || !runB || runA === runB) {
+    setStatus("runHistoryStatus", "Select two different saved runs to compare.", "error");
+    return;
+  }
+  try {
+    const comparison = await requestJSON(`${API_BASE}/api/v1/runs/compare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ run_a_id: runA, run_b_id: runB })
+    });
+    $("runCompareOutput").textContent = JSON.stringify(comparison, null, 2);
+    setStatus("runHistoryStatus", "Run comparison complete. Review added and removed tables, edges, and column mappings below.", "success");
+  } catch (error) {
+    setStatus("runHistoryStatus", "Run comparison failed: " + error.message, "error");
+  }
+}
+
+    function loadExample() {
+
+      $("sqlInput").value = `CREATE TABLE order_summary AS
+
+SELECT c.customer_id, o.order_id
+
+FROM customers c
+
+JOIN orders o
+
+ON c.customer_id = o.customer_id;`;
+
+      setStatus("analysisStatus", "Example SQL restored.");
+
+    }
+
+    function downloadAnalysisReport() {
+
+      if (typeof latestAnalysisData === "undefined" || !latestAnalysisData) {
+
+        alert("Please analyze SQL or upload a SQL file first.");
+
+        return;
+
+      }
+      const blob = new Blob(
+        [JSON.stringify(latestAnalysisData, null, 2)],
+
+        { type: "application/json;charset=utf-8" }
+
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "datalineage-analysis-report.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    }
+
+    function downloadHTMLReport() {
+
+      if (typeof latestAnalysisData === "undefined" || !latestAnalysisData) {
+        alert("Please analyze SQL or upload a SQL file first.");
+        return;
+
+      }
+      const data = latestAnalysisData;
+      const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;",
+
+        '"': "&quot;", "'": "&#39;"
+
+      })[c]);
+
+      const items = value => Array.isArray(value) && value.length
+        ? value.map(x => `<li>${escapeHTML(typeof x === "object" ? JSON.stringify(x) : x)}</li>`).join("")
+        : "<li>No data available</li>";
+      const table = (values, fields) => {
+        if (!Array.isArray(values) || !values.length) {
+          return `<tr><td colspan="${fields.length}">No data available</td></tr>`;
+
+        }
+        return values.map(item => "<tr>" + fields.map(field =>
+          `<td>${escapeHTML(item[field])}</td>`
+        ).join("") + "</tr>").join("");
+
+      };
+      const html = `<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>DataLineage AI Analysis Report</title>
+
+<style>
+
+body{font-family:Arial,sans-serif;max-width:1000px;margin:30px auto;padding:20px;color:#202938;line-height:1.5}
+
+h1,h2{color:#183153}
+
+table{width:100%;border-collapse:collapse;margin-bottom:24px}
+
+th,td{border:1px solid #ccd5e2;padding:9px;text-align:left;overflow-wrap:anywhere}
+
+th{background:#edf2fa}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>DataLineage AI Analysis Report</h1>
+<p>Generated: ${escapeHTML(new Date().toLocaleString())}</p>
+<p>Files scanned: ${escapeHTML(data.files_scanned ?? "N/A")}</p>
+<p>Files parsed: ${escapeHTML(data.files_parsed ?? "N/A")}</p>
+<p>Files with errors: ${escapeHTML(data.files_with_errors ?? "N/A")}</p>
+<h2>Discovered Tables</h2><ul>${items(data.tables)}</ul>
+<h2>Table Relationships</h2>
+<table><tr><th>Source</th><th>Target</th><th>Type</th><th>Confidence</th></tr>
+${table(data.relationships, ["source_table","target_table","relationship_type","confidence"])}</table>
+<h2>Column Lineage</h2>
+<table><tr><th>Source Table</th><th>Source Column</th><th>Target Table</th><th>Target Column</th><th>Confidence</th></tr>
+
+${table(data.column_lineage, ["source_table","source_column","target_table","target_column","transformation","expression_sql","confidence"])}</table>
+
+<h2>Parsing Results</h2>
+
+<table><tr><th>File</th><th>Status</th><th>Statements</th><th>Errors</th></tr>
+
+${table((data.parse_results || []).map(x => ({
+
+  file: x.file,
+
+  status: x.status,
+
+  statement_count: x.statement_count,
+
+  errors: Array.isArray(x.errors) ? x.errors.join("; ") : x.errors
+
+})), ["file","status","statement_count","errors"])}</table>
+
+<h2>Limitations</h2><ul>${items(data.limitations)}</ul>
+
+<p>Note: SQL is analyzed, not executed against a live database.</p>
+
+
+
+
+
+</body>
+
+</html>`;
+      const url = URL.createObjectURL(
+        new Blob([html], { type: "text/html;charset=utf-8" })
+
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "datalineage-analysis-report.html";
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    }
+    $("graphSearch")?.addEventListener("input", () => {
+      if (latestGraphData) renderGraph(latestGraphData);
+    });
+    $("clearGraphSearch")?.addEventListener("click", () => {
+      $("graphSearch").value = "";
+      if (latestGraphData) renderGraph(latestGraphData);
+    });
+    initAuth().then(() => processAuthLink());
+    checkAPI();
+
+
+</script>
+
+<script>
+function toggleGitHubImpactPanel(){
+ const panel=document.getElementById('githubIntegrationPanel');
+ const button=document.getElementById('githubImpactToggle');
+ const willOpen=panel.hidden;
+ panel.hidden=!willOpen;
+ button.setAttribute('aria-expanded',String(willOpen));
+ if(willOpen){panel.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+
+async function runGitHubImpactAnalysis(){
+ const status=document.getElementById('ghStatus'), output=document.getElementById('ghResults');
+ status.textContent='Validating input…'; output.textContent='';
+ try {
+  const files=JSON.parse(document.getElementById('ghFilesJson').value||'[]');
+  if(!Array.isArray(files)) throw new Error('SQL snapshots must be a JSON array');
+  const payload={repository:document.getElementById('ghRepository').value.trim(),pull_request_number:Number(document.getElementById('ghPrNumber').value),base_branch:document.getElementById('ghBaseBranch').value.trim(),head_branch:document.getElementById('ghHeadBranch').value.trim(),files};
+  status.textContent='Running impact analysis…';
+  const response=await fetch('/api/v1/github/analyze',{method:'POST',headers:{'Content-Type':'application/json',...(activeOrganizationId?{'X-Organization-ID':activeOrganizationId}:{})},credentials:'same-origin',body:JSON.stringify(payload)});
+  const data=await response.json(); if(!response.ok) throw new Error(data.detail||'GitHub analysis failed');
+  status.textContent='Analysis completed: '+String(data.status||'unknown').toUpperCase();
+  output.textContent=JSON.stringify(data,null,2);
+ } catch(error){status.textContent='Analysis failed: '+error.message;}
+}
+</script>
+<section class="panel" id="organizationWorkspacePanel" style="margin:24px 0;padding:18px;border:1px solid var(--border,#ccd5e2);border-radius:12px">
+  <h2>Organization Workspace</h2>
+  <p class="muted">Choose the organization whose projects, analysis history, usage and GitHub connection you are working with.</p>
+  <div class="form-grid">
+    <label>Active organization<select id="orgSelector"><option value="">Load organizations</option></select></label>
+    <button type="button" onclick="dlLoadOrganizations()">Refresh organizations</button>
+    <label>New organization name<input id="orgNewName" maxlength="100" placeholder="Company workspace"></label>
+    <button type="button" onclick="dlCreateOrganization()">Create organization</button>
+    <label>New project name<input id="orgProjectName" maxlength="80" placeholder="Data warehouse"></label>
+    <button type="button" onclick="dlCreateProject()">Create project</button>
+    <label>Rename organization<input id="orgRenameName" maxlength="100" placeholder="Organization name"></label>
+    <button type="button" onclick="dlRenameOrganization()">Save organization name</button>
+    <label>Invite member email<input id="orgInviteEmail" type="email" placeholder="developer@company.com"></label>
+    <label>Invitation role<select id="orgInviteRole"><option value="developer">Developer</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></label>
+    <button type="button" onclick="dlInviteMember()">Send invitation</button>
+    <label>Existing member email<input id="orgMemberEmail" type="email" placeholder="member@company.com"></label>
+    <label>New member role<select id="orgMemberRole"><option value="developer">Developer</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></label>
+    <button type="button" onclick="dlUpdateMemberRole()">Update member role</button>
+    <button type="button" onclick="dlRemoveMember()">Remove member</button>
+    <button type="button" onclick="dlLoadInvitations()">Load pending invitations</button>
+    <label>Invitation ID to revoke<input id="orgInvitationId" placeholder="Invitation ID"></label>
+    <button type="button" onclick="dlRevokeInvitation()">Revoke invitation</button>
+    <label>Subscription plan<select id="orgPlan"><option value="free">Free</option><option value="starter">Starter</option><option value="professional">Professional</option><option value="business">Business</option><option value="enterprise">Enterprise</option></select></label>
+    <button type="button" onclick="dlChangePlan()">Change plan (internal only)</button>
+    <button type="button" onclick="dlStartTrial()">Start 14-day trial</button>
+    <button type="button" onclick="dlLoadUsageHistory()">Load usage history</button>
+    <button type="button" onclick="dlLoadBillingHistory()">Load billing history</button>
+    <label>GitHub account<input id="orgGithubAccount" placeholder="company-github"></label>
+    <label>GitHub access token<input id="orgGithubToken" type="password" autocomplete="new-password" placeholder="Token encrypted on server"></label>
+    <button type="button" onclick="dlSaveGithubConnection()">Save organization GitHub connection</button>
+    <button type="button" onclick="dlLoadWorkspaceDetails()">Refresh workspace details</button>
+  </div>
+  <div id="orgWorkspaceStatus" role="status" aria-live="polite"></div>
+  <pre id="orgWorkspaceDetails" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+</section>
+<script>
+async function dlOrgRequest(path, options={}) {
+ const headers={'Content-Type':'application/json',...(activeOrganizationId?{'X-Organization-ID':activeOrganizationId}:{}),...(options.headers||{})};
+ const response=await fetch(path,{...options,headers,credentials:'same-origin'});
+ const data=await response.json(); if(!response.ok) throw new Error(data.detail||'Organization request failed'); return data;
+}
+async function dlLoadOrganizations(){
+ const status=document.getElementById('orgWorkspaceStatus');
+ try{status.textContent='Loading organizations…';const data=await dlOrgRequest('/api/v1/organizations');
+ const select=document.getElementById('orgSelector');select.innerHTML='';
+ for(const org of data.organizations||[]){const option=document.createElement('option');option.value=org.id;option.textContent=org.name+' ('+org.role+')';select.appendChild(option);}
+ if(activeOrganizationId && [...select.options].some(x=>x.value===activeOrganizationId)) select.value=activeOrganizationId; else activeOrganizationId=select.value||'';
+ if(activeOrganizationId)localStorage.setItem('datalineage_active_org',activeOrganizationId);
+ select.onchange=()=>{activeOrganizationId=select.value;localStorage.setItem('datalineage_active_org',activeOrganizationId);dlLoadWorkspaceDetails();};
+ status.textContent=(data.organizations||[]).length+' organization(s) available.';await dlLoadWorkspaceDetails();
+ }catch(e){status.textContent='Could not load organizations: '+e.message;}
+}
+async function dlCreateOrganization(){
+ const name=document.getElementById('orgNewName').value.trim(),status=document.getElementById('orgWorkspaceStatus');
+ try{await dlOrgRequest('/api/v1/organizations',{method:'POST',body:JSON.stringify({name})});document.getElementById('orgNewName').value='';await dlLoadOrganizations();status.textContent='Organization created.';}catch(e){status.textContent='Create failed: '+e.message;}
+}
+async function dlCreateProject(){
+ const name=document.getElementById('orgProjectName').value.trim(),status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId){status.textContent='Select an organization first.';return;}
+ try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/projects',{method:'POST',body:JSON.stringify({name})});document.getElementById('orgProjectName').value='';await dlLoadWorkspaceDetails();status.textContent='Project created.';}catch(e){status.textContent='Project creation failed: '+e.message;}
+}
+
+async function dlRenameOrganization(){
+ const name=document.getElementById('orgRenameName').value.trim(),status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId)return;try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId),{method:'PATCH',body:JSON.stringify({name})});await dlLoadOrganizations();status.textContent='Organization updated.';}catch(e){status.textContent='Rename failed: '+e.message;}
+}
+async function dlInviteMember(){
+ const email=document.getElementById('orgInviteEmail').value.trim(),role=document.getElementById('orgInviteRole').value,status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId)return;try{const result=await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/invitations',{method:'POST',body:JSON.stringify({email,role})});status.textContent='Invitation sent to '+result.email+'.';await dlLoadWorkspaceDetails();}catch(e){status.textContent='Invitation failed: '+e.message;}
+}
+async function dlUpdateMemberRole(){
+ const email=document.getElementById('orgMemberEmail').value.trim(),role=document.getElementById('orgMemberRole').value,status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId||!email)return;try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/members/'+encodeURIComponent(email),{method:'PATCH',body:JSON.stringify({role})});status.textContent='Member role updated.';await dlLoadWorkspaceDetails();}catch(e){status.textContent='Role update failed: '+e.message;}
+}
+async function dlRemoveMember(){
+ const email=document.getElementById('orgMemberEmail').value.trim(),status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId||!email)return;if(!confirm('Remove '+email+' from this organization?'))return;try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/members/'+encodeURIComponent(email),{method:'DELETE'});status.textContent='Member removed.';await dlLoadWorkspaceDetails();}catch(e){status.textContent='Member removal failed: '+e.message;}
+}
+async function dlLoadInvitations(){
+ const status=document.getElementById('orgWorkspaceStatus'),out=document.getElementById('orgWorkspaceDetails');
+ try{const d=await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/invitations');out.textContent=JSON.stringify(d.invitations,null,2);status.textContent='Pending invitations loaded.';}catch(e){status.textContent='Could not load invitations: '+e.message;}
+}
+async function dlRevokeInvitation(){
+ const id=document.getElementById('orgInvitationId').value.trim(),status=document.getElementById('orgWorkspaceStatus');if(!activeOrganizationId||!id)return;
+ try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/invitations/'+encodeURIComponent(id),{method:'DELETE'});status.textContent='Invitation revoked.';await dlLoadInvitations();}catch(e){status.textContent='Invitation revocation failed: '+e.message;}
+}
+async function dlStartTrial(){
+ const plan=document.getElementById('orgPlan').value,status=document.getElementById('orgWorkspaceStatus');if(!activeOrganizationId)return;
+ try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/subscription/trial',{method:'POST',body:JSON.stringify({plan,days:14})});status.textContent='Trial activated. No payment was collected.';await dlLoadWorkspaceDetails();}catch(e){status.textContent='Trial activation failed: '+e.message;}
+}
+async function dlLoadUsageHistory(){
+ const status=document.getElementById('orgWorkspaceStatus'),out=document.getElementById('orgWorkspaceDetails');
+ try{const d=await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/usage/history');out.textContent=JSON.stringify(d.history,null,2);status.textContent='Usage history loaded.';}catch(e){status.textContent='Usage history unavailable: '+e.message;}
+}
+async function dlChangePlan(){
+ const plan=document.getElementById('orgPlan').value,status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId)return;try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/subscription/plan',{method:'POST',body:JSON.stringify({plan})});status.textContent='Plan changed internally. No payment was collected.';await dlLoadWorkspaceDetails();}catch(e){status.textContent='Plan change failed: '+e.message;}
+}
+async function dlLoadBillingHistory(){
+ const status=document.getElementById('orgWorkspaceStatus'),out=document.getElementById('orgWorkspaceDetails');
+ try{const base='/api/v1/organizations/'+encodeURIComponent(activeOrganizationId);const [billing,history]=await Promise.all([dlOrgRequest(base+'/billing/history'),dlOrgRequest(base+'/subscription/history')]);out.textContent=JSON.stringify({billing_events:billing.events,subscription_history:history.subscriptions},null,2);status.textContent='Billing metadata loaded. No live payment processing is enabled.';}catch(e){status.textContent='Billing history unavailable: '+e.message;}
+}
+async function dlSaveGithubConnection(){
+ const account_name=document.getElementById('orgGithubAccount').value.trim(),access_token=document.getElementById('orgGithubToken').value,status=document.getElementById('orgWorkspaceStatus');
+ if(!activeOrganizationId)return;try{await dlOrgRequest('/api/v1/organizations/'+encodeURIComponent(activeOrganizationId)+'/github/connection',{method:'PUT',body:JSON.stringify({account_name,access_token})});document.getElementById('orgGithubToken').value='';status.textContent='Organization GitHub credential saved encrypted on the server.';}catch(e){status.textContent='GitHub connection failed: '+e.message;}
+}
+
+async function dlLoadWorkspaceDetails(){
+ if(!activeOrganizationId)return;const status=document.getElementById('orgWorkspaceStatus'),out=document.getElementById('orgWorkspaceDetails');
+ try{const base='/api/v1/organizations/'+encodeURIComponent(activeOrganizationId);const [org,members,subscription,projects]=await Promise.all([dlOrgRequest(base),dlOrgRequest(base+'/members'),dlOrgRequest(base+'/subscription'),dlOrgRequest(base+'/projects')]);
+ out.textContent=JSON.stringify({organization:org,members:members.members,subscription:subscription.subscription,plan:subscription.plan,usage:subscription.usage,limits:subscription.limits,projects:projects.projects},null,2);status.textContent='Workspace details loaded.';
+ }catch(e){status.textContent='Workspace details unavailable: '+e.message;}
+}
+
+function openAccountPanel(){
+ const drawer=$('accountDrawer'),backdrop=$('accountBackdrop');
+ drawer.classList.add('is-open');backdrop.classList.add('is-open');drawer.setAttribute('aria-hidden','false');$('accountButton').setAttribute('aria-expanded','true');document.body.classList.add('account-open');
+ loadAccountSummary();
+}
+function closeAccountPanel(){
+ $('accountDrawer').classList.remove('is-open');$('accountBackdrop').classList.remove('is-open');$('accountDrawer').setAttribute('aria-hidden','true');$('accountButton').setAttribute('aria-expanded','false');document.body.classList.remove('account-open');
+}
+function accountEscape(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function accountDate(value){if(!value)return 'Not set';const d=new Date(value);return Number.isNaN(d.getTime())?'Not set':d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
+function accountMetric(label,value,limit){
+ const used=Number(value||0),cap=limit===null||limit===undefined?null:Number(limit),pct=cap&&cap>0?Math.min(100,Math.round(used/cap*100)):0;
+ return `<div class="account-metric"><small>${accountEscape(label)}</small><strong>${used.toLocaleString()}${cap===null?'':' / '+cap.toLocaleString()}</strong>${cap===null?'':`<div class="account-progress"><span style="width:${pct}%"></span></div>`}</div>`;
+}
+async function loadAccountSummary(){
+ const status=$('accountPanelStatus'),content=$('accountPanelContent');status.textContent='Loading account and subscription details…';
+ try{
+  const response=await fetch(`${API_BASE}/api/v1/account/summary`,{credentials:'same-origin',cache:'no-store'});
+  const data=await response.json();if(!response.ok){if(response.status===401){status.textContent='Please sign in to view your account.';content.innerHTML='<div class="account-empty"><strong>Sign-in required</strong><p>Your account details are available after signing in.</p><button type="button" onclick="showLoginPanel()">Sign in</button></div>';return;}throw new Error(data.detail||'Could not load account');}
+  status.textContent=data.email||'Signed-in account';
+  const orgs=data.organizations||[];
+  if(!orgs.length){content.innerHTML='<div class="account-empty">No company workspace is assigned to this account yet.</div>';return;}
+  content.innerHTML=orgs.map(org=>{
+   const sub=org.subscription||{},plan=org.plan||{},statusValue=String(sub.status||'unknown').replaceAll('_',' '),days=org.days_remaining;
+   const periodLabel=String(sub.status)==='trial'?'Trial ends':(plan.id==='free'?'Plan period resets':'Next renewal');
+   const daysText=days===null||days===undefined?'Date unavailable':days===0?'Due today':`${days} day${days===1?'':'s'} left`;
+   return `<section class="account-card"><div class="account-card-top"><div><h3>${accountEscape(org.company_name||'Workspace')}</h3><div class="account-muted">Company workspace · ${accountEscape(org.role||'member')}</div></div><span class="account-pill">${accountEscape(statusValue)}</span></div><div class="account-plan">${accountEscape(plan.name||'Unknown plan')}</div><div class="account-muted">${plan.price_inr===null||plan.price_inr===undefined?'Custom pricing':`₹${Number(plan.price_inr).toLocaleString('en-IN')} / month`}</div><div class="account-grid"><div class="account-metric"><small>${periodLabel}</small><strong>${daysText}</strong><small>${accountDate(sub.period_end)}</small></div><div class="account-metric"><small>Your organization role</small><strong>${accountEscape(org.role||'Member')}</strong><small>${Number(org.members||0)} active member(s)</small></div></div><h3 style="margin-top:16px">Monthly usage</h3><div class="account-grid">${accountMetric('SQL analyses',org.usage?.analyses,org.limits?.analyses)}${accountMetric('Projects',org.projects,org.limits?.projects)}${accountMetric('Members',org.members,org.limits?.members)}</div>${(org.warnings||[]).length?`<p class="account-muted" style="color:var(--green);margin-top:12px">${org.warnings.map(accountEscape).join('<br>')}</p>`:''}</section>`;
+  }).join('');
+ }catch(error){status.textContent='Account details unavailable: '+error.message;content.innerHTML='<div class="account-empty">Could not load your account details. Please refresh and try again.</div>';}
+}
+function showLoginPanel(){closeAccountPanel();setAuthMode('login');$('authOverlay').style.display='flex';$('authEmail').focus();}
+</script>
+</body>
+</html>
+
+<script>
+async function ghApi(path, options={}) {
+ const r=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',...(activeOrganizationId?{'X-Organization-ID':activeOrganizationId}:{}),...(options.headers||{})}});
+ const d=await r.json(); if(!r.ok) throw new Error(d.detail||'GitHub request failed'); return d;
+}
+async function ghLoadRepositories(){
+ const s=document.getElementById('ghStatus');
+ try {s.textContent='Loading repositories…'; const d=await ghApi('/api/v1/github/repositories');
+ const sel=document.getElementById('ghRepoSelect'); sel.innerHTML='<option value="">Select repository</option>';
+ for(const repo of d.repositories||[]){const o=document.createElement('option');o.value=repo.full_name;o.textContent=repo.full_name+(repo.private?' (private)':'');sel.appendChild(o);}
+ s.textContent=(d.repositories||[]).length+' repositories loaded.';}
+ catch(e){s.textContent='Could not load repositories: '+e.message;}
+}
+async function ghLoadPullRequests(){
+ const repo=document.getElementById('ghRepoSelect').value, s=document.getElementById('ghStatus');
+ if(!repo){s.textContent='Select a repository first.';return;}
+ try {s.textContent='Loading pull requests…';const [owner,name]=repo.split('/');
+ const d=await ghApi('/api/v1/github/repositories/'+encodeURIComponent(owner)+'/'+encodeURIComponent(name)+'/pulls');
+ const sel=document.getElementById('ghPrSelect');sel.innerHTML='<option value="">Select pull request</option>';
+ for(const pr of d.pull_requests||[]){const o=document.createElement('option');o.value=pr.number;o.textContent='#'+pr.number+' '+(pr.title||'');sel.appendChild(o);}
+ s.textContent=(d.pull_requests||[]).length+' open pull requests loaded.';}
+ catch(e){s.textContent='Could not load pull requests: '+e.message;}
+}
+async function ghAnalyzeLivePR(){
+ const repo=document.getElementById('ghRepoSelect').value, number=Number(document.getElementById('ghPrSelect').value);
+ const s=document.getElementById('ghStatus'), out=document.getElementById('ghResults');
+ if(!repo||!Number.isInteger(number)||number<1){s.textContent='Select a repository and pull request.';return;}
+ try{s.textContent='Retrieving PR files and analyzing SQL…';out.textContent='';
+ const d=await ghApi('/api/v1/github/analyze-pr',{method:'POST',body:JSON.stringify({repository:repo,pull_request_number:number})});
+ s.textContent='PR analysis: '+String(d.status||'unknown').toUpperCase();out.textContent=JSON.stringify(d,null,2);
+ if(d.pull_request_url){const a=document.createElement('a');a.href=d.pull_request_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Open pull request';out.after(a);}
+ }catch(e){s.textContent='PR analysis failed: '+e.message;}
+}
+
+function toggleBillingPanel(){
+ const panel=document.getElementById('billingPanel'); const button=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Plans & Billing');
+ panel.hidden=!panel.hidden; if(button) button.setAttribute('aria-expanded',String(!panel.hidden));
+ if(!panel.hidden) renderBillingPrices();
+}
+const billingPriceCatalog={
+ INR:{symbol:'₹',plans:{starter:1999,professional:7999,business:19999}},
+ USD:{symbol:'$',plans:{starter:29,professional:99,business:249}},
+ GBP:{symbol:'£',plans:{starter:25,professional:79,business:199}},
+ EUR:{symbol:'€',plans:{starter:29,professional:89,business:229}},
+ SGD:{symbol:'S$',plans:{starter:39,professional:129,business:299}},
+ AED:{symbol:'AED ',plans:{starter:109,professional:369,business:899}},
+ AUD:{symbol:'A$',plans:{starter:45,professional:149,business:379}}
+};
+function renderBillingPrices(){
+ const currency=document.getElementById('billingCurrency').value, data=billingPriceCatalog[currency], root=document.getElementById('billingPriceCards'); root.replaceChildren();
+ for(const [plan,amount] of Object.entries(data.plans)){
+  const card=document.createElement('div'); card.className='stat';
+  const title=document.createElement('small'); title.textContent=plan[0].toUpperCase()+plan.slice(1);
+  const price=document.createElement('strong'); price.textContent=data.symbol+amount.toLocaleString()+'/mo';
+  const action=document.createElement('button'); action.type='button'; action.textContent='Choose '+title.textContent; action.style.marginTop='10px'; action.onclick=()=>startPlanCheckout(plan,currency);
+  card.append(title,price,action); root.appendChild(card);
+ }
+}
+async function startPlanCheckout(plan,currency){
+ const status=document.getElementById('billingStatus');
+ if(!activeOrganizationId){status.textContent='Select or create a workspace first, then try checkout again.';return;}
+ try{status.textContent='Creating secure Razorpay checkout…';
+  const data=await requestJSON(`${API_BASE}/api/v1/organizations/${encodeURIComponent(activeOrganizationId)}/billing/checkout`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,currency})});
+  if(!data.checkout_url) throw new Error('Razorpay did not return a checkout URL.');
+  status.textContent='Checkout created. Opening Razorpay…'; window.open(data.checkout_url,'_blank','noopener,noreferrer');
+ }catch(error){status.textContent='Checkout unavailable: '+error.message;}
+}
+</script>
+
+<!-- Milestone 26: structured GitHub PR change-intelligence results. -->
+<script>
+(function () {
+  function m26Escape(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function m26RenderPR(data) {
+    const root = document.getElementById('ghResults');
+    if (!root) return;
+    const intel = data.change_intelligence || {};
+    const risk = intel.risk || {level:'unknown', score:0};
+    const counts = intel.counts || {};
+    const riskColor = risk.level === 'high' ? '#ef7777' : risk.level === 'medium' ? '#e6b85c' : '#64c99a';
+    const cards = [
+      ['SQL files analyzed', counts.analyzed || 0],
+      ['Unparsed / review required', counts.unparsed || 0],
+      ['Added SQL files', counts.added || 0],
+      ['Removed SQL files', counts.removed || 0]
+    ];
+    const cardHtml = cards.map(([label,value]) => `<div style="padding:12px;border:1px solid var(--border);border-radius:9px"><small>${m26Escape(label)}</small><div style="font-size:22px;font-weight:700">${m26Escape(value)}</div></div>`).join('');
+    const files = (intel.files || []).map(file => {
+      const comparison = file.comparison || {};
+      const changes = comparison.changes || {};
+      const riskLabel = comparison.risk && comparison.risk.level ? comparison.risk.level : file.status;
+      const lists = [
+        ['Removed tables', changes.removed_tables], ['Added tables', changes.added_tables],
+        ['Removed columns', changes.removed_columns], ['Added columns', changes.added_columns]
+      ].filter(([,values]) => values && values.length).map(([label,values]) => `<li><strong>${m26Escape(label)}:</strong> ${values.map(m26Escape).join(', ')}</li>`).join('');
+      const warnings = (comparison.ambiguities || []).map(x => `<li>${m26Escape(x.explanation || x.alias || x.type)}</li>`).join('');
+      return `<article style="padding:12px;margin:10px 0;border:1px solid var(--border);border-radius:9px"><strong>${m26Escape(file.filename)}</strong> <span style="color:${file.status === 'unparsed' ? '#e6b85c' : 'var(--muted)'}">${m26Escape(file.status)}${comparison.risk ? ' · '+m26Escape(riskLabel)+' risk' : ''}</span>${file.message ? `<p>${m26Escape(file.message)}</p>` : ''}${lists || warnings ? `<ul>${lists}${warnings}</ul>` : ''}${file.action ? `<p>${m26Escape(file.action)}</p>` : ''}</article>`;
+    }).join('') || '<p>No SQL file comparisons were returned.</p>';
+    const tests = (intel.recommended_tests || []).map(x => `<li>${m26Escape(x)}</li>`).join('');
+    const limitations = (intel.limitations || []).map(x => `<li>${m26Escape(x)}</li>`).join('');
+    root.style.display = 'block';
+    root.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin-bottom:14px">${cardHtml}</div><div style="padding:14px;border:1px solid ${riskColor};border-radius:10px;margin-bottom:14px"><strong>Overall SQL change risk: <span style="color:${riskColor}">${m26Escape(String(risk.level || 'unknown').toUpperCase())}</span></strong><p style="margin:6px 0 0">${m26Escape(risk.explanation || 'Static analysis result; review before merging.')}</p></div><h3>Changed SQL files</h3>${files}<h3>Recommended pre-merge tests</h3><ul>${tests || '<li>Run project SQL compilation and downstream tests.</li>'}</ul><details style="margin-top:12px"><summary>Analysis limitations</summary><ul>${limitations}</ul></details><details style="margin-top:12px"><summary>Full API response</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${m26Escape(JSON.stringify(data,null,2))}</pre></details>`;
+  }
+  window.ghAnalyzeLivePR = async function () {
+    const repo = document.getElementById('ghRepoSelect')?.value;
+    const number = Number(document.getElementById('ghPrSelect')?.value);
+    const status = document.getElementById('ghStatus');
+    const output = document.getElementById('ghResults');
+    if (!repo || !Number.isInteger(number) || number < 1) {
+      status.textContent = 'Select a repository and pull request.'; return;
+    }
+    try {
+      status.textContent = 'Retrieving PR files and calculating SQL change risk…';
+      output.textContent = '';
+      const data = await ghApi('/api/v1/github/analyze-pr', {
+        method:'POST', body:JSON.stringify({repository:repo,pull_request_number:number})
+      });
+      status.textContent = `Analysis completed for ${repo} PR #${number}. Review the risk and recommended tests below.`;
+      m26RenderPR(data);
+    } catch (error) {
+      status.textContent = 'PR analysis failed: ' + error.message;
+    }
+  };
+})();
+</script>

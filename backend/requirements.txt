@@ -1,0 +1,22 @@
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.8,<3.0
+sqlglot>=26,<30
+networkx>=3.2,<4.0
+python-multipart>=0.0.9,<1.0
+pytest>=8.0,<10.0
+httpx>=0.27,<1.0
+cryptography>=42,<47
+python-dotenv>=1.0,<2.0
+
+firebase-admin>=6.5,<8.0
+# Milestone 37 optional live cloud connector SDKs
+boto3>=1.34,<2.0
+azure-identity>=1.17,<2.0
+azure-mgmt-datafactory>=9.0,<10.0
+
+# Milestone 44 optional PostgreSQL driver for the analysis-run store
+psycopg[binary]>=3.2,<4
+
+# M49 optional shared rate limiting
+redis>=5.0,<7.0

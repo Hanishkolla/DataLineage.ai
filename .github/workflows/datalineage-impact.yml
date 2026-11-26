@@ -1,0 +1,62 @@
+name: DataLineage AI SQL impact
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+jobs:
+  sql-impact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Analyze pull request and publish check
+        env:
+          DATALINEAGE_API_URL: ${{ secrets.DATALINEAGE_API_URL }}
+          DATALINEAGE_API_TOKEN: ${{ secrets.DATALINEAGE_API_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$DATALINEAGE_API_URL"
+          test -n "$DATALINEAGE_API_TOKEN"
+          payload="$(mktemp)"
+          result="$(mktemp)"
+          trap 'rm -f "$payload" "$result"' EXIT
+          python - "$REPOSITORY" "$PR_NUMBER" > "$payload" <<'PY'
+          import json, sys
+          print(json.dumps({"repository": sys.argv[1], "pull_request_number": int(sys.argv[2])}))
+          PY
+          http_code="$(curl --silent --show-error --max-time 90 \
+            -o "$result" -w '%{http_code}' \
+            -H "Authorization: Bearer ${DATALINEAGE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary @"$payload" \
+            "${DATALINEAGE_API_URL%/}/api/v1/github/analyze-pr")"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "DataLineage analysis API returned HTTP ${http_code}; response body withheld."
+            exit 1
+          fi
+          python - "$result" <<'PY'
+          import json, sys
+          d=json.load(open(sys.argv[1], encoding="utf-8"))
+          print("DataLineage status:", d.get("status", "unknown"))
+          print("Changed SQL files:", d.get("changed_sql_files", 0))
+          print("Direct impacts:", d.get("directly_affected_objects", 0))
+          print("Unresolved warnings:", len(d.get("unresolved_lineage_warnings", [])))
+          PY
+          head_sha="$(python - "$result" <<'PY'
+          import json, sys
+          print(json.load(open(sys.argv[1], encoding="utf-8")).get("head_sha", ""))
+          PY
+          )"
+          if [ -n "$head_sha" ]; then
+            python - "$result" "$REPOSITORY" "$head_sha" > "$payload" <<'PY'
+          import json, sys
+          report=json.load(open(sys.argv[1], encoding="utf-8"))
+          print(json.dumps({"repository":sys.argv[2],"head_sha":sys.argv[3],"report":report}))
+          PY
+            curl --silent --show-error --max-time 30 -o /dev/null               -H "Authorization: Bearer ${DATALINEAGE_API_TOKEN}"               -H "Content-Type: application/json"               --data-binary @"$payload"               "${DATALINEAGE_API_URL%/}/api/v1/github/publish-check"
+          fi

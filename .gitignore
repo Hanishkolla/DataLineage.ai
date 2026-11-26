@@ -1,0 +1,37 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+node_modules/
+dist/
+
+# Local analysis-run database
+backend/data/
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Environment files and deployment secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Local data, uploads, logs, and backups
+data/
+backend/data/
+uploads/
+*.log
+*.bak
+
+# Additional local development files
+venv/
+*.db
+*.sqlite
+.coverage
+htmlcov/
+build/
+.DS_Store
